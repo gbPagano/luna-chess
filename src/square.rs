@@ -1,7 +1,10 @@
 use crate::file::File;
 use crate::rank::Rank;
+use anyhow::{bail, Error};
+use std::fmt;
+use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Square(u8);
 impl Square {
     pub fn new(rank: Rank, file: File) -> Self {
@@ -28,6 +31,43 @@ impl Square {
 impl Default for Square {
     fn default() -> Self {
         Self::new(Rank::First, File::A)
+    }
+}
+
+impl FromStr for Square {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() != 2 {
+            bail!("error");
+        }
+
+        let mut chars = s.chars();
+        let file_char = chars.next().unwrap();
+        let rank_char = chars.next().unwrap();
+
+        let file = match file_char {
+            'a'..='h' => File::from_index(file_char as usize - b'a' as usize),
+            _ => bail!("error"),
+        };
+
+        let rank = match rank_char.to_digit(10) {
+            Some(n @ 1..=8) => Rank::from_index((n - 1) as usize),
+            _ => bail!("error"),
+        };
+
+        Ok(Square::new(rank, file))
+    }
+}
+
+impl fmt::Display for Square {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            (('a' as u8) + ((self.0 & 7) as u8)) as char,
+            (('1' as u8) + ((self.0 >> 3) as u8)) as char
+        )
     }
 }
 
