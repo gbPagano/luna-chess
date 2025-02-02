@@ -49,8 +49,17 @@ impl Board {
         self.castle_rights = rights;
     }
 
-    fn set_en_passant(&mut self, square: Option<Square>) {
+    fn set_en_passant(&mut self, square: Option<Square>) -> Result<(), Error> {
+        if let Some(s) = square {
+            if ![Rank::Third, Rank::Sixth].contains(&s.get_rank())
+                || s.get_rank() == Rank::Third && self.side_to_move == Color::Black
+                || s.get_rank() == Rank::Sixth && self.side_to_move == Color::White
+            {
+                bail!("invalid");
+            }
+        }
         self.en_passant = square;
+        Ok(())
     }
 
     fn get_piece(&self, square: Square) -> Option<Piece> {
@@ -152,9 +161,7 @@ impl FromStr for Board {
         let rights = CastleRights::from_str(tokens[2])?;
         board.set_castling_rights(rights);
 
-        if let Ok(square) = Square::from_str(tokens[3]) {
-            board.set_en_passant(Some(square));
-        }
+        board.set_en_passant(Square::from_str(tokens[3]).ok())?;
 
         Ok(board)
     }
@@ -214,5 +221,17 @@ mod tests {
         let initial_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         let board_fen = format!("{}", board);
         assert_eq!(board_fen, initial_fen);
+    }
+
+    #[test]
+    fn set_en_passant() {
+        let mut board = Board::default();
+        assert!(board.set_en_passant(Square::from_str("e3").ok()).is_ok());
+        assert!(board.set_en_passant(Square::from_str("e6").ok()).is_err());
+        board.set_side(Color::Black);
+        assert!(board.set_en_passant(Square::from_str("e6").ok()).is_ok());
+        assert!(board.set_en_passant(Square::from_str("e3").ok()).is_err());
+
+        assert!(board.set_en_passant(Square::from_str("e4").ok()).is_err());
     }
 }
