@@ -207,7 +207,33 @@ impl fmt::Display for Board {
             write!(f, "-")?;
         }
 
-        write!(f, " 0 1") // what is this??
+        write!(f, " 0 1") // TODO
+    }
+}
+
+impl fmt::Debug for Board {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for rank in ALL_RANKS.iter().rev() {
+            if *rank == Rank::Eighth {
+                write!(f, "  ╭───┬───┬───┬───┬───┬───┬───┬───╮\n")?;
+            } else {
+                write!(f, "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n")?;
+            }
+            write!(f, "{}", rank.to_index() + 1)?;
+
+            for file in ALL_FILES.iter() {
+                write!(f, " │ ")?;
+                let square = Square::new(*rank, *file);
+                if let Some((piece, color)) = self.get_piece_and_color(square) {
+                    write!(f, "{}", piece.to_symbol(color))?;
+                } else {
+                    write!(f, " ")?;
+                }
+            }
+            write!(f, " │\n")?;
+        }
+        write!(f, "  ╰───┴───┴───┴───┴───┴───┴───┴───╯\n")?;
+        write!(f, "    A   B   C   D   E   F   G   H  ")
     }
 }
 

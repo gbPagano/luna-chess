@@ -1,8 +1,8 @@
-mod bitboard;
-mod board;
-mod castle_rights;
-mod color;
-mod file;
-mod pieces;
-mod rank;
-mod square;
+pub mod bitboard;
+pub mod board;
+pub mod castle_rights;
+pub mod color;
+pub mod file;
+pub mod pieces;
+pub mod rank;
+pub mod square;

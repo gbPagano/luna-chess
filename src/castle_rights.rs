@@ -74,7 +74,7 @@ mod tests {
         assert_eq!(CastleRights::from_str("Qk").unwrap(), rights);
         assert!(CastleRights::from_str("abc").is_err());
     }
-    
+
     #[test]
     fn test_castle_rights_fmt() {
         let mut rights = CastleRights::default();

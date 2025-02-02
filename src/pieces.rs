@@ -24,6 +24,23 @@ impl Piece {
             piece
         }
     }
+
+    pub fn to_symbol(&self, color: Color) -> &str {
+        match (self, color) {
+            (Piece::Pawn, Color::White) => "♟",
+            (Piece::Pawn, Color::Black) => "♙",
+            (Piece::Knight, Color::White) => "♞",
+            (Piece::Knight, Color::Black) => "♘",
+            (Piece::Bishop, Color::White) => "♝",
+            (Piece::Bishop, Color::Black) => "♗",
+            (Piece::Rook, Color::White) => "♜",
+            (Piece::Rook, Color::Black) => "♖",
+            (Piece::Queen, Color::White) => "♛",
+            (Piece::Queen, Color::Black) => "♕",
+            (Piece::King, Color::White) => "♚",
+            (Piece::King, Color::Black) => "♔",
+        }
+    }
 }
 
 impl fmt::Display for Piece {
