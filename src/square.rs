@@ -87,4 +87,22 @@ mod tests {
         assert_eq!(Square::new(Rank::First, File::A).get_rank(), Rank::First);
         assert_eq!(Square::new(Rank::Seventh, File::G).get_file(), File::G);
     }
+
+    #[test]
+    fn test_rank_from_str() {
+        assert_eq!(
+            Square::from_str("a1").unwrap(),
+            Square::new(Rank::First, File::A)
+        );
+        assert_eq!(
+            Square::from_str("e3").unwrap(),
+            Square::new(Rank::Third, File::E)
+        );
+    }
+
+    #[test]
+    fn test_rank_fmt() {
+        assert_eq!(format!("{}", Square::new(Rank::First, File::A)), "a1");
+        assert_eq!(format!("{}", Square::new(Rank::Third, File::E)), "e3");
+    }
 }
