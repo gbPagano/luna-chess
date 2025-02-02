@@ -59,3 +59,28 @@ impl FromStr for CastleRights {
         Ok(rights)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_castle_rights_from_str() {
+        let mut rights = CastleRights::default();
+        assert_eq!(CastleRights::from_str("").unwrap(), rights);
+        assert_eq!(CastleRights::from_str("-").unwrap(), rights);
+        rights.white_queenside = true;
+        rights.black_kingside = true;
+        assert_eq!(CastleRights::from_str("Qk").unwrap(), rights);
+        assert!(CastleRights::from_str("abc").is_err());
+    }
+    
+    #[test]
+    fn test_castle_rights_fmt() {
+        let mut rights = CastleRights::default();
+        assert_eq!(format!("{}", rights), "-");
+        rights.white_queenside = true;
+        rights.black_kingside = true;
+        assert_eq!(format!("{}", rights), "Qk");
+    }
+}
