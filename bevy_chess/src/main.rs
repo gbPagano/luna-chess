@@ -22,7 +22,6 @@ fn main() {
             ..default()
         }))
         .init_resource::<SelectedPiece>()
-        .insert_resource(Msaa { samples: 4 })
         .insert_resource(Board::new())
         .add_systems(Startup, (setup, spawn_board, spawn_pieces))
         .add_systems(Update, update_piece)
