@@ -1,7 +1,8 @@
 use bevy::{prelude::*, window::{EnabledButtons, PresentMode, WindowTheme}};
 
 mod pieces;
-use pieces::*;
+mod board;
+use {pieces::*, board::*};
 
 fn main() {
     App::new()
@@ -31,27 +32,3 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
-
-fn spawn_board(mut commands: Commands) {
-    let tile_size = 100.0;
-    let colors = [Color::srgb(0.92, 0.93, 0.82), Color::srgb(0.46, 0.59, 0.34)];
-
-    for row in 0..8 {
-        for col in 0..8 {
-            let color = colors[(row + col) % 2];
-            let x = col as f32 * tile_size - (4.0 * tile_size) + tile_size / 2.0;
-            let y = row as f32 * tile_size - (4.0 * tile_size) + tile_size / 2.0;
-
-            commands.spawn((
-                Sprite {
-                    color,
-                    custom_size: Some(Vec2::splat(tile_size)),
-                    ..default()
-                },
-                Transform::from_xyz(x, y, 0.0),
-            ));
-        }
-    }
-}
-
-

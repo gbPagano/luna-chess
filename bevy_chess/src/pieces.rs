@@ -22,7 +22,7 @@ pub struct SelectedPiece {
 }
 
 #[derive(Component)]
-pub struct Position {
+pub struct PiecePosition {
     pub x: usize,
     pub y: usize,
 }
@@ -109,7 +109,7 @@ pub fn spawn_pieces(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
         Transform::from_xyz(x, y, 1.0),
-        Position {
+        PiecePosition {
             x: col as usize,
             y: row as usize,
         },
@@ -123,57 +123,58 @@ pub fn update_piece(
     camera_query: Query<(&Camera, &GlobalTransform)>,
     board: Res<Board>,
     mut selected: ResMut<SelectedPiece>,
-    mut query: Query<(&mut Transform, &Position)>,
+    mut query: Query<(&mut Transform, &mut PiecePosition)>,
     mut commands: Commands
     ) 
 {
     if buttons.just_pressed(MouseButton::Left) {
+        println!("{:?}", selected.position);
         let window = windows.single();
         let (camera, camera_transform) = camera_query.single();
 
-        if let Some(world_pos) = window.cursor_position()
-        .and_then(|cursor| Some(camera.viewport_to_world(camera_transform, cursor)))
-        .map(|ray| ray.unwrap().origin.truncate()) 
-        {
-            let tile_width = 100.0;
-            let x = ((world_pos.x + 4.0 * tile_width) / tile_width).floor() as usize;
-            let y = ((world_pos.y + 4.0 * tile_width) / tile_width).floor() as usize;
+        if let Some(world_pos) = window.cursor_position() {
+            if let Ok(ray) = camera.viewport_to_world(camera_transform, world_pos) {
+                let world_pos = ray.origin.truncate();
+                let tile_width = 100.0;
+                let x = ((world_pos.x + 4.0 * tile_width) / tile_width).floor() as usize;
+                let y = ((world_pos.y + 4.0 * tile_width) / tile_width).floor() as usize;
 
-            match selected.position {
-                None => {
-                    if board.pieces.contains_key(&(x,y)) {
-                        selected.position = Some((x,y));
-                        println!("Peça selecionada em: ({}, {})", x, y);
+                match selected.position {
+                    None => {
+                        if board.pieces.contains_key(&(x,y)) {
+                            selected.position = Some((x,y));
+                            println!("Peça selecionada em: ({}, {})", x, y);
+                        }
                     }
-                }
 
-                Some((old_x, old_y)) => {
-                    if (x,y) != (old_x, old_y) {
-                        if let Some(piece) = board.pieces.get(&(old_x, old_y)) {
-                            commands.insert_resource(Board {
-                                pieces: board.pieces.clone(),
-                            });
+                    Some((old_x, old_y)) => {
+                        if (x,y) != (old_x, old_y) {
+                            if let Some(piece) = board.pieces.get(&(old_x, old_y)) {
+                                selected.position = None;
+                                
+                                let mut new_pieces = board.pieces.clone();
+                                new_pieces.remove(&(old_x, old_y));
+                                new_pieces.insert((x, y), *piece);
 
-                            let mut new_pieces = board.pieces.clone();
-                            new_pieces.remove(&(old_x, old_y));
-                            new_pieces.insert((x, y), *piece);
+                                commands.insert_resource(Board {
+                                    pieces: new_pieces,
+                                });
 
-                            commands.insert_resource(Board {
-                                pieces: new_pieces,
-                            });
+                                for (mut transform, mut pos) in &mut query {
+                                    if pos.x == old_x && pos.y == old_y {
+                                        let new_x = x as f32 * tile_width - (4.0 * tile_width) + tile_width / 2.0;
+                                        let new_y = y as f32 * tile_width - (4.0 * tile_width) + tile_width / 2.0;
 
-                            for (mut transform, pos) in &mut query {
-                                if pos.x == old_x && pos.y == old_y {
-                                    let new_x = x as f32 * tile_width - (4.0 * tile_width) + tile_width / 2.0;
-                                    let new_y = y as f32 * tile_width - (4.0 * tile_width) + tile_width / 2.0;
+                                        pos.x = x;
+                                        pos.y = y;
 
-                                    transform.translation.x = new_x;
-                                    transform.translation.y = new_y;
+                                        transform.translation.x = new_x;
+                                        transform.translation.y = new_y;
+                                    }
                                 }
                             }
                         }
                     }
-                    selected.position = None;
                 }
             }
         }
