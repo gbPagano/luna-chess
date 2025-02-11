@@ -48,6 +48,10 @@ impl Rank {
     pub fn up(&self) -> Self {
         Self::from_index(self.to_index() + 1)
     }
+
+    pub fn is_edge(&self) -> bool {
+        *self == Rank::First || *self == Rank::Eighth
+    }
 }
 
 #[cfg(test)]

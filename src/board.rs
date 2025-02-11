@@ -19,7 +19,7 @@ pub struct Board {
     castle_rights: CastleRights,
 }
 impl Board {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             pieces_bitboards: [BitBoard::new(0); 6],
             colors_bitboards: [BitBoard::new(0); 2],
@@ -35,7 +35,7 @@ impl Board {
         self.xor(bitboard, piece, color);
     }
 
-    fn xor(&mut self, bitboard: BitBoard, piece: Piece, color: Color) {
+    pub fn xor(&mut self, bitboard: BitBoard, piece: Piece, color: Color) {
         self.pieces_bitboards[piece.to_index()] ^= bitboard;
         self.colors_bitboards[color.to_index()] ^= bitboard;
         self.combined_bitboard ^= bitboard;

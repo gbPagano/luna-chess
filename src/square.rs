@@ -26,6 +26,46 @@ impl Square {
     pub fn get_file(&self) -> File {
         File::from_index((self.0 & 7) as usize)
     }
+
+    pub fn up(&self) -> Option<Square> {
+        if self.get_rank() == Rank::Eighth {
+            None
+        } else {
+            Some(Square::new(self.get_rank().up(), self.get_file()))
+        }
+    }
+
+    pub fn down(&self) -> Option<Square> {
+        if self.get_rank() == Rank::First {
+            None
+        } else {
+            Some(Square::new(self.get_rank().down(), self.get_file()))
+        }
+    }
+
+    pub fn left(&self) -> Option<Square> {
+        if self.get_file() == File::A {
+            None
+        } else {
+            Some(Square::new(self.get_rank(), self.get_file().left()))
+        }
+    }
+
+    pub fn right(&self) -> Option<Square> {
+        if self.get_file() == File::H {
+            None
+        } else {
+            Some(Square::new(self.get_rank(), self.get_file().right()))
+        }
+    }
+
+    pub fn is_edge(&self) -> bool {
+        self.get_file().is_edge() || self.get_rank().is_edge()
+    }
+
+    pub fn all_squares() -> impl Iterator<Item = Square> {
+        (0..64).map(Square::from_index)
+    }
 }
 
 impl Default for Square {

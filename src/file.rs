@@ -48,6 +48,10 @@ impl File {
     pub fn right(&self) -> Self {
         Self::from_index(self.to_index() + 1)
     }
+
+    pub fn is_edge(&self) -> bool {
+        *self == File::A || *self == File::H
+    }
 }
 
 #[cfg(test)]

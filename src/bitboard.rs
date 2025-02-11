@@ -68,6 +68,19 @@ impl BitBoard {
     pub fn set(rank: Rank, file: File) -> BitBoard {
         BitBoard::from_square(Square::new(rank, file))
     }
+
+    pub fn get_squares(&self) -> Vec<Square> {
+        let mut squares = Vec::new();
+        let mut bb = self.0;
+
+        while bb != 0 {
+            let idx = bb.trailing_zeros() as u8;
+            squares.push(Square::from_index(idx));
+            bb &= bb - 1;
+        }
+
+        squares
+    }
 }
 
 #[cfg(test)]
