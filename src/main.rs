@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use luna_chess::color::Color;
 use luna_chess::gen_moves::rays::*;
-use luna_chess::gen_moves::magics::*;
+use luna_chess::gen_moves::attacks::*;
 use luna_chess::pieces::Piece;
 use luna_chess::square::Square;
 use luna_chess::bitboard::BitBoard;
@@ -23,15 +23,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     gen_bishop_rays();
 
     let square: Square = "c3".parse()?; 
-    let (blockers, attack_masks) = gen_magic_attack_map(square,Piece::Rook);
+    let piece = Piece::Rook;
+    let (blockers, attack_masks) = gen_magic_attack_map(square,piece);
     
     for (b, a) in blockers.iter().zip(attack_masks) {
         let mut b_board = Board::new();
         b_board.xor(*b, Piece::Pawn, Color::Black);
         
         let mut a_board = Board::new();
-        a_board.xor(a, Piece::Rook, Color::White);
-        a_board.xor(BitBoard::from_square(square), Piece::Rook, Color::White);
+        a_board.xor(a, piece, Color::White);
+        a_board.xor(BitBoard::from_square(square), piece, Color::White);
         
         println!("{:?}", b_board);
         println!("{:?}", a_board);

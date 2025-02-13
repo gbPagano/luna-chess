@@ -1,7 +1,10 @@
+use super::attacks::gen_magic_attack_map;
 use super::rays::*;
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::square::Square;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 
 pub fn magic_mask(square: Square, piece: Piece) -> BitBoard {
     get_rays(square, piece)
@@ -17,53 +20,131 @@ pub fn magic_mask(square: Square, piece: Piece) -> BitBoard {
             .fold(BitBoard(0), |b, s| b | BitBoard::from_square(s))
 }
 
-pub fn gen_blocker_combinations(mask: BitBoard) -> Vec<BitBoard> {
-    let mut result = vec![];
-    let squares = mask.get_squares();
-
-    for i in 0..(1u64 << squares.len()) {
-        let mut current = BitBoard(0);
-        for j in 0..squares.len() {
-            if (i & (1u64 << j)) == (1u64 << j) {
-                current |= BitBoard::from_square(squares[j as usize]);
-            }
-        }
-        result.push(current);
-    }
-
-    result
+#[derive(Copy, Clone)]
+struct Magic {
+    magic_number: BitBoard,
+    mask: BitBoard,
+    offset: u32,
+    rightshift: u8,
 }
 
-pub fn gen_magic_attack_map(square: Square, piece: Piece) -> (Vec<BitBoard>, Vec<BitBoard>) {
-    let occupancy_mask = magic_mask(square, piece);
-    let blockers_combinations = gen_blocker_combinations(occupancy_mask);
-    let mut attack_map = Vec::new();
+static mut MAGIC_NUMBERS: [[Magic; 64]; 2] = [[Magic {
+    magic_number: BitBoard(0),
+    mask: BitBoard(0),
+    offset: 0,
+    rightshift: 0,
+}; 64]; 2]; // for rooks and bishops
 
-    let directions: Vec<fn(Square) -> Option<_>> = match piece {
-        Piece::Rook => vec![|s| s.left(), |s| s.right(), |s| s.up(), |s| s.down()],
-        Piece::Bishop => vec![
-            |s| s.left().map_or(None, |s| s.up()),
-            |s| s.right().map_or(None, |s| s.up()),
-            |s| s.left().map_or(None, |s| s.down()),
-            |s| s.right().map_or(None, |s| s.down()),
-        ],
-        _ => panic!("Magic only for Rooks and Bishops"),
-    };
+const NUM_MOVES: usize = 64 * (1<<12) /* Rook Moves */ +
+                         64 * (1<<9) /* Bishop Moves */;
+static mut MOVES: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
+static mut MOVE_RAYS: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
 
-    for blockers in blockers_combinations.iter() {
-        let mut attack_mask = BitBoard(0);
-        for dir in directions.iter() {
-            let mut next_square = dir(square);
-            while let Some(curr_sq) = next_square {
-                attack_mask ^= BitBoard::from_square(curr_sq);
-                if (BitBoard::from_square(curr_sq) & *blockers) != BitBoard(0) {
+fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
+    let (blockers, attacks) = gen_magic_attack_map(square, piece);
+    let mask = magic_mask(square, piece);
+
+    let mut new_offset = curr_offset;
+
+    for i in 0..curr_offset {
+        let mut found = true;
+        for j in 0..attacks.len() {
+            unsafe {
+                if MOVE_RAYS[i + j] & get_rays(square, piece) != BitBoard(0) {
+                    found = false;
                     break;
                 }
-                next_square = dir(curr_sq);
             }
         }
-        attack_map.push(attack_mask);
+        if found {
+            new_offset = i;
+            break;
+        }
     }
 
-    (blockers_combinations, attack_map)
+    let mut magic = Magic {
+        magic_number: BitBoard(0),
+        mask,
+        offset: new_offset as u32,
+        rightshift: (blockers.len().leading_zeros() + 1) as u8,
+    };
+
+    // TODO: tranform this into unittest
+    debug_assert_eq!(blockers.len().count_ones(), 1);
+    debug_assert_eq!(blockers.len(), attacks.len());
+
+    debug_assert_eq!(blockers.iter().fold(BitBoard(0), |b, n| b | *n), mask);
+    debug_assert_eq!(
+        attacks.iter().fold(BitBoard(0), |b, n| b | *n),
+        get_rays(square, piece)
+    );
+
+    let mut rng = SmallRng::from_os_rng();
+
+    let mut done = false;
+    while !done {
+        let magic_number = BitBoard::random(&mut rng);
+
+        if (mask * magic_number).0.count_ones() < 6 {
+            continue;
+        }
+        done = true;
+
+        let mut new_attacks = vec![BitBoard(0); blockers.len()];
+        for (i, &blocker) in blockers.iter().enumerate() {
+            let j = ((magic_number * blocker) >> magic.rightshift).0 as usize;
+            if new_attacks[j] == BitBoard(0) || new_attacks[j] == attacks[i] {
+                new_attacks[j] = new_attacks[i];
+            } else {
+                done = false;
+                break;
+            }
+        }
+
+        if done {
+            magic.magic_number = magic_number;
+        }
+    }
+
+    unsafe {
+        MAGIC_NUMBERS[if piece == Piece::Rook { 0 } else { 1 }][square.to_index()] = magic;
+
+        for (i, &blocker) in blockers.iter().enumerate() {
+            let j = ((magic.magic_number * blocker) >> magic.rightshift).0 as usize;
+            MOVES[magic.offset as usize + j] |= attacks[i];
+            MOVE_RAYS[magic.offset as usize + j] |= get_rays(square, piece);
+        }
+    }
+    let next_offset = if new_offset + attacks.len() < curr_offset {
+        curr_offset
+    } else {
+        new_offset + attacks.len()
+    };
+    
+    next_offset
+}
+
+pub fn gen_all_magic() {
+    let mut offset = 0;
+    for piece in [Piece::Rook, Piece::Bishop].iter() {
+        for square in Square::all_squares() {
+            offset = generate_magic(square, *piece, offset);
+        }
+    }
+
+    dbg!(offset);
+}
+
+
+#[test]
+fn name() {
+    gen_rook_rays();
+    gen_bishop_rays();
+
+    //find_magic("c3".parse().unwrap(), Piece::Rook, 0);
+
+    gen_all_magic();
+
+    assert!(false);
+
 }

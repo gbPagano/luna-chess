@@ -1,7 +1,8 @@
 use crate::file::File;
 use crate::rank::Rank;
 use crate::square::Square;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not};
+use rand::Rng;
+use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shr};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BitBoard(pub u64);
@@ -52,6 +53,22 @@ impl BitXorAssign for BitBoard {
     }
 }
 
+impl Mul for BitBoard {
+    type Output = BitBoard;
+
+    fn mul(self, rhs: BitBoard) -> BitBoard {
+        BitBoard(self.0.wrapping_mul(rhs.0))
+    }
+}
+
+impl Shr<u8> for BitBoard {
+    type Output = Self;
+
+    fn shr(self, rhs: u8) -> Self::Output {
+        BitBoard(self.0 >> rhs)
+    }
+}
+
 impl BitBoard {
     pub fn new(val: u64) -> BitBoard {
         BitBoard(val)
@@ -80,6 +97,10 @@ impl BitBoard {
         }
 
         squares
+    }
+
+    pub fn random<R: Rng>(rng: &mut R) -> BitBoard {
+        BitBoard::new(rng.gen::<u64>() & rng.gen::<u64>() & rng.gen::<u64>())
     }
 }
 
