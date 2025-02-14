@@ -1,3 +1,4 @@
+/// Represents a rank (row) on a chessboard, ranging from First to Eighth.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum Rank {
@@ -23,6 +24,7 @@ pub const ALL_RANKS: [Rank; 8] = [
 ];
 
 impl Rank {
+    /// Converts an index (0-7) to a `Rank`. Wraps around using bitwise AND.
     pub fn from_index(i: usize) -> Self {
         match i & 7 {
             0 => Rank::First,
@@ -37,14 +39,17 @@ impl Rank {
         }
     }
 
+    /// Returns the index (0-7) corresponding to the file.
     pub fn to_index(&self) -> usize {
         *self as usize
     }
 
+    /// Returns the rank below of current one, with wrap-around
     pub fn down(&self) -> Self {
         Self::from_index(self.to_index().wrapping_sub(1))
     }
 
+    /// Returns the rank above of current one, with wrap-around
     pub fn up(&self) -> Self {
         Self::from_index(self.to_index() + 1)
     }

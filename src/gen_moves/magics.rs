@@ -85,9 +85,9 @@ fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
     while !done {
         let magic_number = BitBoard::random(&mut rng);
 
-        if (mask * magic_number).0.count_ones() < 6 {
-            continue;
-        }
+        //if (mask * magic_number).0.count_ones() < 6 {
+        //    continue;
+        //}
         done = true;
 
         let mut new_attacks = vec![BitBoard(0); blockers.len()];

@@ -4,13 +4,16 @@ use anyhow::{bail, Error};
 use std::fmt;
 use std::str::FromStr;
 
+/// Represents a square on a chessboard, identified by a rank and file.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Square(u8);
+
 impl Square {
     pub fn new(rank: Rank, file: File) -> Self {
         Square((rank.to_index() << 3 ^ file.to_index()) as u8)
     }
 
+    /// Creates a `Square` from an index (0-63), ensuring it remains within bounds.
     pub fn from_index(idx: u8) -> Self {
         Square(idx & 63)
     }
@@ -27,6 +30,7 @@ impl Square {
         File::from_index((self.0 & 7) as usize)
     }
 
+    /// Returns the square one rank above, if possible.
     pub fn up(&self) -> Option<Square> {
         if self.get_rank() == Rank::Eighth {
             None
@@ -35,6 +39,7 @@ impl Square {
         }
     }
 
+    /// Returns the square one rank below, if possible.
     pub fn down(&self) -> Option<Square> {
         if self.get_rank() == Rank::First {
             None
@@ -43,6 +48,7 @@ impl Square {
         }
     }
 
+    /// Returns the square one file to the left, if possible.
     pub fn left(&self) -> Option<Square> {
         if self.get_file() == File::A {
             None
@@ -51,6 +57,7 @@ impl Square {
         }
     }
 
+    /// Returns the square one file to the right, if possible.
     pub fn right(&self) -> Option<Square> {
         if self.get_file() == File::H {
             None
@@ -59,16 +66,19 @@ impl Square {
         }
     }
 
+    /// Checks if the square is on the edge of the board
     pub fn is_edge(&self) -> bool {
         self.get_file().is_edge() || self.get_rank().is_edge()
     }
 
+    /// Returns an iterator over all 64 squares on the board.
     pub fn all_squares() -> impl Iterator<Item = Square> {
         (0..64).map(Square::from_index)
     }
 }
 
 impl Default for Square {
+    /// Returns the default square (A1).
     fn default() -> Self {
         Self::new(Rank::First, File::A)
     }
@@ -77,6 +87,7 @@ impl Default for Square {
 impl FromStr for Square {
     type Err = Error;
 
+    /// Parses a square from a string representation (e.g., "a1").
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.len() != 2 {
             bail!("error");
@@ -101,6 +112,7 @@ impl FromStr for Square {
 }
 
 impl fmt::Display for Square {
+    /// Formats the square as a standard chess notation string (e.g., "a1").
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

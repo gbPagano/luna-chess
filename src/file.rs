@@ -1,3 +1,4 @@
+/// Represents the files (columns) on a chessboard, ranging from 'A' to 'H'.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum File {
@@ -23,6 +24,7 @@ pub const ALL_FILES: [File; 8] = [
 ];
 
 impl File {
+    /// Converts an index (0-7) to a `File`. Wraps around using bitwise AND.
     pub fn from_index(i: usize) -> Self {
         match i & 7 {
             0 => File::A,
@@ -37,14 +39,17 @@ impl File {
         }
     }
 
+    /// Returns the index (0-7) corresponding to the file.
     pub fn to_index(&self) -> usize {
         *self as usize
     }
 
+    /// Returns the file to the left of current one, with wrap-around.
     pub fn left(&self) -> Self {
         Self::from_index(self.to_index().wrapping_sub(1))
     }
 
+    /// Returns the file to the right of current one, with wrap-around.
     pub fn right(&self) -> Self {
         Self::from_index(self.to_index() + 1)
     }
@@ -75,6 +80,7 @@ mod tests {
 
     #[test]
     fn test_file_right_left() {
+        // Test wrap-around behavior
         assert_eq!(File::A.right(), File::B);
         assert_eq!(File::A.left(), File::H);
         assert_eq!(File::H.right(), File::A);

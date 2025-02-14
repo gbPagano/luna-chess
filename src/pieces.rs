@@ -1,6 +1,7 @@
 use crate::color::Color;
 use std::fmt;
 
+/// Represents the different types of chess pieces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Piece {
     Pawn,
@@ -12,10 +13,12 @@ pub enum Piece {
 }
 
 impl Piece {
+    /// Returns the index [0-5] of the piece as a `usize`.
     pub fn to_index(&self) -> usize {
         *self as usize
     }
 
+    /// Returns the string representation of the piece, capitalized for white pieces.
     pub fn to_string(&self, color: Color) -> String {
         let piece = format!("{}", self);
         if color == Color::White {
@@ -25,6 +28,7 @@ impl Piece {
         }
     }
 
+    /// Returns the Unicode chess symbol representing the piece.
     pub fn to_symbol(&self, color: Color) -> &str {
         match (self, color) {
             (Piece::Pawn, Color::White) => "♟",
@@ -44,6 +48,7 @@ impl Piece {
 }
 
 impl fmt::Display for Piece {
+    /// Formats the piece using standard chess notation (e.g., "p" for pawn, "k" for king).
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

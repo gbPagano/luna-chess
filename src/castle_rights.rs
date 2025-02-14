@@ -2,6 +2,8 @@ use anyhow::{bail, Error};
 use std::fmt;
 use std::str::FromStr;
 
+/// A struct representing the castling rights for both players in chess.
+/// It tracks whether each player has kingside and queenside castling rights.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct CastleRights {
     pub white_kingside: bool,

@@ -4,6 +4,7 @@ use crate::square::Square;
 use rand::Rng;
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shr};
 
+/// Represents a 64-bit bitboard, where each bit corresponds to a square on a chessboard.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BitBoard(pub u64);
 
@@ -78,14 +79,17 @@ impl BitBoard {
         self.0 == 0
     }
 
+    /// Converts a `Square` into a `BitBoard` with a single bit set corresponding to the square.
     pub fn from_square(tile: Square) -> BitBoard {
         BitBoard(1u64 << tile.to_index())
     }
 
+    /// Creates a `BitBoard` from a specific rank and file.
     pub fn set(rank: Rank, file: File) -> BitBoard {
         BitBoard::from_square(Square::new(rank, file))
     }
 
+    /// Returns a `Vec<Square>` containing all the squares that are set in the `BitBoard`.
     pub fn get_squares(&self) -> Vec<Square> {
         let mut squares = Vec::new();
         let mut bb = self.0;
@@ -99,8 +103,9 @@ impl BitBoard {
         squares
     }
 
+    /// Generates a random `BitBoard` by combining random `u64` values.
     pub fn random<R: Rng>(rng: &mut R) -> BitBoard {
-        BitBoard::new(rng.gen::<u64>() & rng.gen::<u64>() & rng.gen::<u64>())
+        BitBoard::new(rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>())
     }
 }
 
