@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::Write;
+
 use super::attacks::gen_magic_attack_map;
 use super::rays::*;
 use crate::bitboard::BitBoard;
@@ -37,6 +40,7 @@ static mut MAGIC_NUMBERS: [[Magic; 64]; 2] = [[Magic {
 
 const NUM_MOVES: usize = 64 * (1<<12) /* Rook Moves */ +
                          64 * (1<<9) /* Bishop Moves */;
+static mut GEN_MOVES_SIZE: usize = 0;
 static mut MOVES: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
 static mut MOVE_RAYS: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
 
@@ -120,7 +124,7 @@ fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
     } else {
         new_offset + attacks.len()
     };
-    
+
     next_offset
 }
 
@@ -131,10 +135,50 @@ pub fn gen_all_magic() {
             offset = generate_magic(square, *piece, offset);
         }
     }
-
+    unsafe {
+        GEN_MOVES_SIZE = offset;
+    }
     dbg!(offset);
 }
 
+pub fn write_magics(f: &mut File) {
+    let magic_struct = format!(
+        r#"#[derive(Copy, Clone)]
+struct Magic {{
+    magic_number: BitBoard,
+    mask: BitBoard,
+    offset: u32,
+    rightshift: u8
+}}
+"#
+    );
+    writeln!(f, "{}", magic_struct).unwrap();
+
+    writeln!(f, "const MAGIC_NUMBERS: [[Magic; 64]; 2] = [[").unwrap();
+    for i in 0..2 {
+        for j in 0..64 {
+            unsafe {
+                writeln!(f, "    Magic {{ magic_number: BitBoard({}), mask: BitBoard({}), offset: {}, rightshift: {} }},",
+                    MAGIC_NUMBERS[i][j].magic_number.0,
+                    MAGIC_NUMBERS[i][j].mask.0,
+                    MAGIC_NUMBERS[i][j].offset,
+                    MAGIC_NUMBERS[i][j].rightshift).unwrap();
+            }
+        }
+        if i != 1 {
+            writeln!(f, "], [").unwrap();
+        }
+    }
+    writeln!(f, "]];").unwrap();
+    
+    unsafe {
+        writeln!(f, "const MOVES: [BitBoard; {}] = [", GEN_MOVES_SIZE).unwrap();
+        for i in 0..GEN_MOVES_SIZE {
+            writeln!(f, "    BitBoard({}),", MOVES[i].0).unwrap();
+        }
+    }
+    writeln!(f, "];").unwrap();
+}
 
 #[test]
 fn name() {
@@ -146,5 +190,4 @@ fn name() {
     gen_all_magic();
 
     assert!(false);
-
 }

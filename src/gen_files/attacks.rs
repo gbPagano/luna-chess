@@ -3,7 +3,6 @@ use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::square::Square;
 
-
 pub fn gen_blocker_combinations(mask: BitBoard) -> Vec<BitBoard> {
     let mut result = vec![];
     let squares = mask.get_squares();

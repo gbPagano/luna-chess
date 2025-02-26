@@ -1,3 +1,6 @@
+use std::fs::File;
+use std::io::Write;
+
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::square::Square;
@@ -5,13 +8,32 @@ use crate::square::Square;
 pub static mut ROOK_RAYS: [BitBoard; 64] = [BitBoard(0); 64];
 pub static mut BISHOP_RAYS: [BitBoard; 64] = [BitBoard(0); 64];
 
+pub fn gen_rays() {
+    gen_rook_rays();
+    gen_bishop_rays();
+}
+
+pub fn write_rays(f: &mut File) {
+    writeln!(f, "const ROOK_RAYS: [BitBoard; 64] = [").unwrap();
+    for i in 0..64 {
+        unsafe { writeln!(f, "    BitBoard({}),", ROOK_RAYS[i].0).unwrap() };
+    }
+    writeln!(f, "];").unwrap();
+
+    writeln!(f, "const BISHOP_RAYS: [BitBoard; 64] = [").unwrap();
+    for i in 0..64 {
+        unsafe { writeln!(f, "    BitBoard({}),", BISHOP_RAYS[i].0).unwrap() };
+    }
+    writeln!(f, "];").unwrap();
+}
+
 pub fn gen_rook_rays() {
     for square in Square::all_squares() {
         let ray = Square::all_squares()
             .filter(|dest| {
                 (square.get_rank() == dest.get_rank() || square.get_file() == dest.get_file())
                     && square != *dest
-            }) 
+            })
             .fold(BitBoard(0), |bb, s| BitBoard::from_square(s) | bb);
 
         unsafe {
@@ -46,5 +68,3 @@ pub fn get_rays(square: Square, piece: Piece) -> BitBoard {
         }
     }
 }
-
-

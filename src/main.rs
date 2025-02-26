@@ -1,12 +1,12 @@
 use luna_chess::board::Board;
 use std::str::FromStr;
 
+use luna_chess::bitboard::BitBoard;
 use luna_chess::color::Color;
-use luna_chess::gen_moves::rays::*;
-use luna_chess::gen_moves::attacks::*;
+use luna_chess::gen_files::attacks::*;
+use luna_chess::gen_files::rays::*;
 use luna_chess::pieces::Piece;
 use luna_chess::square::Square;
-use luna_chess::bitboard::BitBoard;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -22,24 +22,22 @@ fn main() -> Result<(), Box<dyn Error>> {
     gen_rook_rays();
     gen_bishop_rays();
 
-    let square: Square = "c3".parse()?; 
+    let square: Square = "c3".parse()?;
     let piece = Piece::Rook;
-    let (blockers, attack_masks) = gen_magic_attack_map(square,piece);
-    
+    let (blockers, attack_masks) = gen_magic_attack_map(square, piece);
+
     for (b, a) in blockers.iter().zip(attack_masks) {
         let mut b_board = Board::new();
         b_board.xor(*b, Piece::Pawn, Color::Black);
-        
+
         let mut a_board = Board::new();
         a_board.xor(a, piece, Color::White);
         a_board.xor(BitBoard::from_square(square), piece, Color::White);
-        
+
         println!("{:?}", b_board);
         println!("{:?}", a_board);
         println!("-----------");
-
     }
 
-    
     Ok(())
 }

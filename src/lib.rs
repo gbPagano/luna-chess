@@ -3,7 +3,7 @@ pub mod board;
 pub mod castle_rights;
 pub mod color;
 pub mod file;
+pub mod gen_files;
 pub mod pieces;
 pub mod rank;
 pub mod square;
-pub mod gen_moves;

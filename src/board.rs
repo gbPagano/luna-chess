@@ -248,12 +248,19 @@ mod tests {
         let board_fen = format!("{}", board);
         assert_eq!(board_fen, initial_fen);
     }
-    
+
     #[test]
     fn test_board_from_str() {
-        assert!(Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1").is_ok());
-        assert!(Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e3 0 1").is_err());
-        assert!(Board::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2").is_ok());
+        assert!(
+            Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1").is_ok()
+        );
+        assert!(
+            Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e3 0 1").is_err()
+        );
+        assert!(
+            Board::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
+                .is_ok()
+        );
     }
 
     #[test]
