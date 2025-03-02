@@ -7,3 +7,4 @@ pub mod gen_files;
 pub mod pieces;
 pub mod rank;
 pub mod square;
+pub mod magic;
