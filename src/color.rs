@@ -19,4 +19,11 @@ impl Color {
             Color::Black => Rank::Second,
         }
     }
+
+    pub fn starting_rank(&self) -> Rank {
+        match self {
+            Color::White => Rank::First,
+            Color::Black => Rank::Eighth,
+        }
+    }
 }

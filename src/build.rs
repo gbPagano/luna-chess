@@ -18,6 +18,7 @@ fn main() -> std::io::Result<()> {
     gen_between();
     gen_lines();
     gen_knight_moves();
+    gen_king_moves();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let magic_path = Path::new(&out_dir).join("magic_file.rs");
@@ -28,6 +29,7 @@ fn main() -> std::io::Result<()> {
     write_between(&mut f)?;
     write_lines(&mut f)?;
     write_knight_moves(&mut f)?;
+    write_king_moves(&mut f)?;
 
     Ok(())
 }
