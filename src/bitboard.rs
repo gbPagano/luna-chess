@@ -84,6 +84,11 @@ impl BitBoard {
         BitBoard(1u64 << tile.to_index())
     }
 
+    /// Convert a `BitBoard` to a `Square`. Returns the least-significant `Square`
+    pub fn to_square(&self) -> Square {
+        Square::from_index(self.0.trailing_zeros() as u8)
+    }
+
     /// Creates a `BitBoard` from a specific rank and file.
     pub fn set(rank: Rank, file: File) -> BitBoard {
         BitBoard::from_square(Square::new(rank, file))

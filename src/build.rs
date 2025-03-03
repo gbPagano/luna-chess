@@ -10,11 +10,13 @@ mod pieces;
 mod rank;
 mod square;
 
-use gen_files::{gen_all_magic, gen_rays, write_magics, write_rays};
+use gen_files::*;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     gen_rays();
     gen_all_magic();
+    gen_between();
+    gen_lines();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let magic_path = Path::new(&out_dir).join("magic_file.rs");
@@ -22,4 +24,8 @@ fn main() {
 
     write_rays(&mut f);
     write_magics(&mut f);
+    write_between(&mut f)?;
+    write_lines(&mut f)?;
+
+    Ok(())
 }

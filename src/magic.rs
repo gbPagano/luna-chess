@@ -34,3 +34,19 @@ pub fn get_bishop_rays(square: Square) -> BitBoard {
 pub fn get_rook_rays(square: Square) -> BitBoard {
     unsafe { *ROOK_RAYS.get_unchecked(square.to_index()) }
 }
+
+pub fn get_line(sq_1: Square, sq_2: Square) -> BitBoard {
+    unsafe {
+        *LINES
+            .get_unchecked(sq_1.to_index())
+            .get_unchecked(sq_2.to_index())
+    }
+}
+
+pub fn get_between(sq_1: Square, sq_2: Square) -> BitBoard {
+    unsafe {
+        *BETWEEN
+            .get_unchecked(sq_1.to_index())
+            .get_unchecked(sq_2.to_index())
+    }
+}

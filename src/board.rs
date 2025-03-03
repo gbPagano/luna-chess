@@ -17,6 +17,8 @@ pub struct Board {
     side_to_move: Color,
     en_passant: Option<Square>,
     castle_rights: CastleRights,
+    pinned_bitboard: BitBoard,
+    checkers_bitboard: BitBoard,
 }
 impl Board {
     pub fn new() -> Self {
@@ -27,6 +29,8 @@ impl Board {
             side_to_move: Color::White,
             en_passant: None,
             castle_rights: CastleRights::default(),
+            pinned_bitboard: BitBoard(0),
+            checkers_bitboard: BitBoard(0),
         }
     }
 
@@ -93,6 +97,34 @@ impl Board {
         let piece = self.get_piece(square)?;
         let color = self.get_color(square)?;
         Some((piece, color))
+    }
+
+    pub fn get_piece_bitboard(&self, piece: Piece) -> BitBoard {
+        self.pieces_bitboards[piece.to_index()]
+    }
+
+    pub fn get_combined_bitboard(&self) -> BitBoard {
+        self.combined_bitboard
+    }
+
+    pub fn side_to_move(&self) -> Color {
+        self.side_to_move
+    }
+
+    pub fn get_color_bitboard(&self, color: Color) -> BitBoard {
+        self.colors_bitboards[color.to_index()]
+    }
+
+    pub fn get_king_square(&self, color: Color) -> Square {
+        (self.get_piece_bitboard(Piece::King) & self.get_color_bitboard(color)).to_square()
+    }
+
+    pub fn get_pinned_bitboard(&self) -> BitBoard {
+        self.pinned_bitboard
+    }
+
+    pub fn get_checkers_bitboard(&self) -> BitBoard {
+        self.checkers_bitboard
     }
 }
 

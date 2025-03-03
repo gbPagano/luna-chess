@@ -170,7 +170,7 @@ struct Magic {{
         }
     }
     writeln!(f, "]];").unwrap();
-    
+
     unsafe {
         writeln!(f, "const MOVES: [BitBoard; {}] = [", GEN_MOVES_SIZE).unwrap();
         for i in 0..GEN_MOVES_SIZE {
