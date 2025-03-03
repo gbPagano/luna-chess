@@ -1,3 +1,4 @@
+use crate::color::Color;
 use crate::file::File;
 use crate::rank::Rank;
 use anyhow::{bail, Error};
@@ -63,6 +64,13 @@ impl Square {
             None
         } else {
             Some(Square::new(self.get_rank(), self.get_file().right()))
+        }
+    }
+
+    pub fn forward(&self, color: Color) -> Option<Square> {
+        match color {
+            Color::White => self.up(),
+            Color::Black => self.down(),
         }
     }
 

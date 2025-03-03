@@ -1,3 +1,5 @@
+use crate::color::Color;
+
 /// Represents a rank (row) on a chessboard, ranging from First to Eighth.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
@@ -56,6 +58,13 @@ impl Rank {
 
     pub fn is_edge(&self) -> bool {
         *self == Rank::First || *self == Rank::Eighth
+    }
+
+    pub fn forward(&self, color: Color) -> Self {
+        match color {
+            Color::White => self.up(),
+            Color::Black => self.down(),
+        }
     }
 }
 

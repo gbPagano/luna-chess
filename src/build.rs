@@ -19,6 +19,8 @@ fn main() -> std::io::Result<()> {
     gen_lines();
     gen_knight_moves();
     gen_king_moves();
+    gen_pawn_moves();
+    gen_pawn_attacks();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let magic_path = Path::new(&out_dir).join("magic_file.rs");
@@ -30,6 +32,8 @@ fn main() -> std::io::Result<()> {
     write_lines(&mut f)?;
     write_knight_moves(&mut f)?;
     write_king_moves(&mut f)?;
+    write_pawn_moves(&mut f)?;
+    write_pawn_attacks(&mut f)?;
 
     Ok(())
 }
