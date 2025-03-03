@@ -8,20 +8,29 @@ use super::movegen::{BitBoardMove, MoveList};
 
 use crate::magic::{get_between, get_bishop_moves, get_line, get_rook_moves};
 
-#[derive(PartialEq)]
-pub enum CheckStatus {
-    InCheck,
-    NotInCheck,
-}
-
 pub trait AsPiece {
     const PIECE: Piece;
+}
+
+pub struct InCheck;
+pub struct NotInCheck;
+
+pub trait CheckStatus {
+    const IN_CHECK: bool;
+}
+
+impl CheckStatus for InCheck {
+    const IN_CHECK: bool = true;
+}
+
+impl CheckStatus for NotInCheck {
+    const IN_CHECK: bool = false;
 }
 
 pub trait PieceMoves: AsPiece {
     fn pseudo_legals(square: Square, color: Color, combined: BitBoard, mask: BitBoard) -> BitBoard;
 
-    fn legals(movelist: &mut MoveList, board: &Board, mask: BitBoard, status: CheckStatus) {
+    fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
         let combined = board.get_combined_bitboard();
         let color = board.side_to_move();
         let my_pieces = board.get_color_bitboard(color);
@@ -31,9 +40,10 @@ pub trait PieceMoves: AsPiece {
         let pinned = board.get_pinned_bitboard();
         let checkers = board.get_checkers_bitboard();
 
-        let check_mask = match status {
-            CheckStatus::InCheck => get_between(checkers.to_square(), king_square) ^ checkers,
-            CheckStatus::NotInCheck => !BitBoard(0), // full bitboard
+        let check_mask = if T::IN_CHECK {
+            get_between(checkers.to_square(), king_square) ^ checkers
+        } else {
+            !BitBoard(0) // full bitboard
         };
 
         for square in (pieces & !pinned).get_squares() {
@@ -43,7 +53,7 @@ pub trait PieceMoves: AsPiece {
             }
         }
 
-        if status == CheckStatus::InCheck {
+        if T::IN_CHECK {
             for square in (pieces & pinned).get_squares() {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
                     & get_line(square, king_square);

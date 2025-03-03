@@ -37,21 +37,21 @@ impl MoveGen {
         let mut movelist: MoveList = Vec::new();
 
         if checkers.is_empty() {
-            //    PawnMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
-            //    KnightMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
-            BishopMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
-            RookMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
-            QueenMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
-        //    KingMoves::legals(&mut movelist, &board, mask, CheckStatus::NotInCheck);
+            //    PawnMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            //    KnightMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            BishopMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            RookMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            QueenMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+        //    KingMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
         } else if checkers.0.count_ones() == 1 {
-            //    PawnMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
-            //    KnightMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
-            BishopMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
-            RookMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
-            QueenMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
-        //    KingMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
+            //PawnMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            //KnightMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            BishopMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            RookMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            QueenMoves::legals::<InCheck>(&mut movelist, &board, mask);
+        //    KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
         } else {
-            //    KingMoves::legals(&mut movelist, &board, mask, CheckStatus::InCheck);
+        //    KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
         }
         //
         movelist
