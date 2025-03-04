@@ -6,7 +6,7 @@ use crate::square::Square;
 
 use super::movegen::{BitBoardMove, MoveList};
 
-use crate::magic::{get_between, get_bishop_moves, get_line, get_rook_moves};
+use crate::magic;
 
 pub trait AsPiece {
     const PIECE: Piece;
@@ -41,7 +41,7 @@ pub trait PieceMoves: AsPiece {
         let checkers = board.get_checkers_bitboard();
 
         let check_mask = if T::IN_CHECK {
-            get_between(checkers.to_square(), king_square) ^ checkers
+            magic::get_between(checkers.to_square(), king_square) ^ checkers
         } else {
             !BitBoard(0) // full bitboard
         };
@@ -56,7 +56,7 @@ pub trait PieceMoves: AsPiece {
         if T::IN_CHECK {
             for square in (pieces & pinned).get_squares() {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
-                    & get_line(square, king_square);
+                    & magic::get_line(square, king_square);
                 if !moves.is_empty() {
                     movelist.push(BitBoardMove::new(square, moves, false));
                 }
@@ -68,7 +68,7 @@ pub trait PieceMoves: AsPiece {
 pub struct RookMoves;
 impl PieceMoves for RookMoves {
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
-        get_rook_moves(sq, combined) & mask
+        magic::get_rook_moves(sq, combined) & mask
     }
 }
 impl AsPiece for RookMoves {
@@ -78,7 +78,7 @@ impl AsPiece for RookMoves {
 pub struct BishopMoves;
 impl PieceMoves for BishopMoves {
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
-        get_bishop_moves(sq, combined) & mask
+        magic::get_bishop_moves(sq, combined) & mask
     }
 }
 impl AsPiece for BishopMoves {
@@ -88,9 +88,123 @@ impl AsPiece for BishopMoves {
 pub struct QueenMoves;
 impl PieceMoves for QueenMoves {
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
-        (get_rook_moves(sq, combined) ^ get_bishop_moves(sq, combined)) & mask
+        (magic::get_rook_moves(sq, combined) ^ magic::get_bishop_moves(sq, combined)) & mask
     }
 }
 impl AsPiece for QueenMoves {
     const PIECE: Piece = Piece::Queen;
+}
+
+pub struct KnightMoves;
+impl PieceMoves for KnightMoves {
+    fn pseudo_legals(sq: Square, _: Color, _combined: BitBoard, mask: BitBoard) -> BitBoard {
+        magic::get_knight_moves(sq) & mask
+    }
+}
+impl AsPiece for KnightMoves {
+    const PIECE: Piece = Piece::Knight;
+}
+
+pub struct PawnMoves;
+impl PawnMoves {
+    pub fn legal_ep_move(board: &Board, source: Square, dest: Square) -> bool {
+        let captured_pawn = board
+            .en_passant()
+            .unwrap()
+            .forward(!board.side_to_move())
+            .unwrap();
+
+        let combined = board.get_combined_bitboard()
+            ^ BitBoard::from_square(captured_pawn)
+            ^ BitBoard::from_square(source)
+            ^ BitBoard::from_square(dest);
+
+        let king_square = board.get_king_square(board.side_to_move());
+
+        let enemy_rooks = (board.get_piece_bitboard(Piece::Rook)
+            | board.get_piece_bitboard(Piece::Queen))
+            & board.get_color_bitboard(!board.side_to_move());
+
+        if !(magic::get_rook_rays(king_square) & enemy_rooks).is_empty()
+            && !(magic::get_rook_moves(king_square, combined) & enemy_rooks).is_empty()
+        {
+            return false;
+        }
+
+        let enemy_bishops = (board.get_piece_bitboard(Piece::Bishop)
+            | board.get_piece_bitboard(Piece::Queen))
+            & board.get_color_bitboard(!board.side_to_move());
+
+        if !(magic::get_bishop_rays(king_square) & enemy_bishops).is_empty()
+            && !(magic::get_bishop_moves(king_square, combined) & enemy_bishops).is_empty()
+        {
+            return false;
+        }
+
+        return true;
+    }
+}
+impl PieceMoves for PawnMoves {
+    fn pseudo_legals(sq: Square, color: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
+        magic::get_pawn_moves(sq, color, combined) & mask
+    }
+
+    fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
+        let combined = board.get_combined_bitboard();
+        let color = board.side_to_move();
+        let my_pieces = board.get_color_bitboard(color);
+        let king_square = board.get_king_square(color);
+
+        let pieces = board.get_piece_bitboard(Self::PIECE) & my_pieces;
+        let pinned = board.get_pinned_bitboard();
+        let checkers = board.get_checkers_bitboard();
+
+        let check_mask = if T::IN_CHECK {
+            magic::get_between(checkers.to_square(), king_square) ^ checkers
+        } else {
+            !BitBoard(0) // full bitboard
+        };
+
+        for square in (pieces & !pinned).get_squares() {
+            let moves = Self::pseudo_legals(square, color, combined, mask) & check_mask;
+            if !moves.is_empty() {
+                movelist.push(BitBoardMove::new(
+                    square,
+                    moves,
+                    square.get_rank() == color.pre_promotion_rank(),
+                ));
+            }
+        }
+
+        if T::IN_CHECK {
+            for square in (pieces & pinned).get_squares() {
+                let moves = Self::pseudo_legals(square, color, combined, mask)
+                    & magic::get_line(square, king_square);
+                if !moves.is_empty() {
+                    movelist.push(BitBoardMove::new(
+                        square,
+                        moves,
+                        square.get_rank() == color.pre_promotion_rank(),
+                    ));
+                }
+            }
+        }
+
+        if let Some(ep_square) = board.en_passant() {
+            let rank = magic::get_rank_bitboard(ep_square.get_rank().forward(!color));
+            let files = magic::get_adjacent_files(ep_square.get_file());
+            for square in (rank & files & pieces).get_squares() {
+                if PawnMoves::legal_ep_move(board, square, ep_square) {
+                    movelist.push(BitBoardMove::new(
+                        square,
+                        BitBoard::from_square(ep_square),
+                        false,
+                    ));
+                }
+            }
+        }
+    }
+}
+impl AsPiece for PawnMoves {
+    const PIECE: Piece = Piece::Pawn;
 }

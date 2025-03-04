@@ -1,4 +1,5 @@
 use crate::rank::Rank;
+use std::ops::Not;
 
 /// Enum representing the two colors in chess
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,6 +16,13 @@ impl Color {
 
     pub fn promotion_rank(&self) -> Rank {
         match self {
+            Color::White => Rank::Eighth,
+            Color::Black => Rank::First,
+        }
+    }
+
+    pub fn pre_promotion_rank(&self) -> Rank {
+        match self {
             Color::White => Rank::Seventh,
             Color::Black => Rank::Second,
         }
@@ -24,6 +32,16 @@ impl Color {
         match self {
             Color::White => Rank::First,
             Color::Black => Rank::Eighth,
+        }
+    }
+}
+impl Not for Color {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
         }
     }
 }

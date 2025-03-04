@@ -21,6 +21,7 @@ fn main() -> std::io::Result<()> {
     gen_king_moves();
     gen_pawn_moves();
     gen_pawn_attacks();
+    gen_chessboard_utils();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let magic_path = Path::new(&out_dir).join("magic_file.rs");
@@ -34,6 +35,7 @@ fn main() -> std::io::Result<()> {
     write_king_moves(&mut f)?;
     write_pawn_moves(&mut f)?;
     write_pawn_attacks(&mut f)?;
+    write_chessboard_utils(&mut f)?;
 
     Ok(())
 }

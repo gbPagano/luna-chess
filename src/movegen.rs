@@ -37,21 +37,21 @@ impl MoveGen {
         let mut movelist: MoveList = Vec::new();
 
         if checkers.is_empty() {
-            //    PawnMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            //    KnightMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            PawnMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            KnightMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
             BishopMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
             RookMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
             QueenMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
         //    KingMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
         } else if checkers.0.count_ones() == 1 {
-            //PawnMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            //KnightMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            PawnMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            KnightMoves::legals::<InCheck>(&mut movelist, &board, mask);
             BishopMoves::legals::<InCheck>(&mut movelist, &board, mask);
             RookMoves::legals::<InCheck>(&mut movelist, &board, mask);
             QueenMoves::legals::<InCheck>(&mut movelist, &board, mask);
         //    KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
         } else {
-        //    KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            //    KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
         }
         //
         movelist

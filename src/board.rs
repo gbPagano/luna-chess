@@ -126,6 +126,10 @@ impl Board {
     pub fn get_checkers_bitboard(&self) -> BitBoard {
         self.checkers_bitboard
     }
+
+    pub fn en_passant(&self) -> Option<Square> {
+        self.en_passant
+    }
 }
 
 impl Default for Board {
