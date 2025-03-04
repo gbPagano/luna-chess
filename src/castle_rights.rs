@@ -2,6 +2,10 @@ use anyhow::{bail, Error};
 use std::fmt;
 use std::str::FromStr;
 
+use crate::bitboard::BitBoard;
+use crate::color::Color;
+use crate::magic::{KINGSIDE_CASTLE_SQUARES, QUEENSIDE_CASTLE_SQUARES};
+
 /// A struct representing the castling rights for both players in chess.
 /// It tracks whether each player has kingside and queenside castling rights.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -10,6 +14,30 @@ pub struct CastleRights {
     pub white_queenside: bool,
     pub black_kingside: bool,
     pub black_queenside: bool,
+}
+
+impl CastleRights {
+    pub fn has_kingside(&self, color: Color) -> bool {
+        match color {
+            Color::White => self.white_kingside,
+            Color::Black => self.black_kingside,
+        }
+    }
+
+    pub fn has_queenside(&self, color: Color) -> bool {
+        match color {
+            Color::White => self.white_queenside,
+            Color::Black => self.black_queenside,
+        }
+    }
+
+    pub fn kingside_squares(&self, color: Color) -> BitBoard {
+        unsafe { *KINGSIDE_CASTLE_SQUARES.get_unchecked(color.to_index()) }
+    }
+
+    pub fn queenside_squares(&self, color: Color) -> BitBoard {
+        unsafe { *QUEENSIDE_CASTLE_SQUARES.get_unchecked(color.to_index()) }
+    }
 }
 
 impl fmt::Display for CastleRights {

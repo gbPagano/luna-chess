@@ -1,8 +1,8 @@
 use crate::bitboard::BitBoard;
 use crate::color::Color;
-use crate::square::Square;
-use crate::rank::Rank;
 use crate::file::File;
+use crate::rank::Rank;
+use crate::square::Square;
 
 include!(concat!(env!("OUT_DIR"), "/magic_file.rs"));
 
@@ -90,4 +90,8 @@ pub fn get_rank_bitboard(rank: Rank) -> BitBoard {
 
 pub fn get_adjacent_files(file: File) -> BitBoard {
     unsafe { *ADJACENT_FILES.get_unchecked(file.to_index()) }
+}
+
+pub fn get_king_moves(sq: Square) -> BitBoard {
+    unsafe { *KING_MOVES.get_unchecked(sq.to_index()) }
 }

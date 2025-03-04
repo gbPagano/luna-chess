@@ -208,3 +208,92 @@ impl PieceMoves for PawnMoves {
 impl AsPiece for PawnMoves {
     const PIECE: Piece = Piece::Pawn;
 }
+
+pub struct KingMoves;
+impl KingMoves {
+    pub fn legal_move(board: &Board, dest: Square) -> bool {
+        let combined = board.get_combined_bitboard()
+            ^ (board.get_piece_bitboard(Piece::King)
+                & board.get_color_bitboard(board.side_to_move()))
+            | BitBoard::from_square(dest);
+
+        let mut attackers = BitBoard(0);
+
+        let enemy_rooks = (board.get_piece_bitboard(Piece::Rook)
+            | board.get_piece_bitboard(Piece::Queen))
+            & board.get_color_bitboard(!board.side_to_move());
+        attackers |= magic::get_rook_moves(dest, combined) & enemy_rooks;
+
+        let enemy_bishops = (board.get_piece_bitboard(Piece::Bishop)
+            | board.get_piece_bitboard(Piece::Queen))
+            & board.get_color_bitboard(!board.side_to_move());
+        attackers |= magic::get_bishop_moves(dest, combined) & enemy_bishops;
+
+        let knight_rays = magic::get_knight_moves(dest);
+        attackers |= knight_rays
+            & board.get_piece_bitboard(Piece::Knight)
+            & board.get_color_bitboard(!board.side_to_move());
+
+        let king_rays = magic::get_king_moves(dest);
+        attackers |= king_rays
+            & board.get_piece_bitboard(Piece::King)
+            & board.get_color_bitboard(!board.side_to_move());
+
+        attackers |= magic::get_pawn_attacks(
+            dest,
+            board.side_to_move(),
+            board.get_piece_bitboard(Piece::Pawn) & board.get_color_bitboard(!board.side_to_move()),
+        );
+
+        attackers.is_empty()
+    }
+}
+impl PieceMoves for KingMoves {
+    fn pseudo_legals(sq: Square, _: Color, _combined: BitBoard, mask: BitBoard) -> BitBoard {
+        magic::get_knight_moves(sq) & mask
+    }
+
+    fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
+        let combined = board.get_combined_bitboard();
+        let color = board.side_to_move();
+        let king_square = board.get_king_square(color);
+
+        let mut moves = Self::pseudo_legals(king_square, color, combined, mask);
+        for dest in moves.get_squares() {
+            if !KingMoves::legal_move(board, dest) {
+                moves ^= BitBoard::from_square(dest);
+            }
+        }
+
+        if !T::IN_CHECK {
+            if board.castle_rights().has_kingside(color)
+                && (combined & board.castle_rights().kingside_squares(color)).is_empty()
+            {
+                let first = king_square.right().unwrap();
+                let second = first.right().unwrap();
+                if KingMoves::legal_move(board, first) && KingMoves::legal_move(board, second) {
+                    moves ^= BitBoard::from_square(second);
+                }
+            }
+
+            if board.castle_rights().has_queenside(color)
+                && (combined & board.castle_rights().queenside_squares(color)).is_empty()
+            {
+                let first = king_square.left().unwrap();
+                let second = first.left().unwrap();
+                if KingMoves::legal_move(board, first) && KingMoves::legal_move(board, second) {
+                    moves ^= BitBoard::from_square(second);
+                }
+            }
+        }
+
+        if !moves.is_empty() {
+            unsafe {
+                movelist.push(BitBoardMove::new(king_square, moves, false));
+            }
+        }
+    }
+}
+impl AsPiece for KingMoves {
+    const PIECE: Piece = Piece::King;
+}

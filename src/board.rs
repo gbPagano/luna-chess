@@ -130,6 +130,10 @@ impl Board {
     pub fn en_passant(&self) -> Option<Square> {
         self.en_passant
     }
+
+    pub fn castle_rights(&self) -> CastleRights {
+        self.castle_rights
+    }
 }
 
 impl Default for Board {
