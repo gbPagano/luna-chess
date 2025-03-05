@@ -288,9 +288,7 @@ impl PieceMoves for KingMoves {
         }
 
         if !moves.is_empty() {
-            unsafe {
-                movelist.push(BitBoardMove::new(king_square, moves, false));
-            }
+            movelist.push(BitBoardMove::new(king_square, moves, false));
         }
     }
 }

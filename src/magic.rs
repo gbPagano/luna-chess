@@ -84,6 +84,14 @@ pub fn get_pawn_moves(sq: Square, color: Color, blockers: BitBoard) -> BitBoard 
     get_pawn_attacks(sq, color, blockers) ^ get_pawn_forward_moves(sq, color, blockers)
 }
 
+pub fn get_pawn_source_double_moves() -> BitBoard {
+    PAWN_SOURCE_DOUBLE_MOVES
+}
+
+pub fn get_pawn_dest_double_moves() -> BitBoard {
+    PAWN_DEST_DOUBLE_MOVES
+}
+
 pub fn get_rank_bitboard(rank: Rank) -> BitBoard {
     unsafe { *RANKS.get_unchecked(rank.to_index()) }
 }
@@ -94,4 +102,8 @@ pub fn get_adjacent_files(file: File) -> BitBoard {
 
 pub fn get_king_moves(sq: Square) -> BitBoard {
     unsafe { *KING_MOVES.get_unchecked(sq.to_index()) }
+}
+
+pub fn get_castle_squares() -> BitBoard {
+    CASTLE_SQUARES
 }

@@ -74,6 +74,13 @@ impl Square {
         }
     }
 
+    pub fn backward(&self, color: Color) -> Option<Square> {
+        match color {
+            Color::White => self.down(),
+            Color::Black => self.up(),
+        }
+    }
+
     /// Checks if the square is on the edge of the board
     pub fn is_edge(&self) -> bool {
         self.get_file().is_edge() || self.get_rank().is_edge()

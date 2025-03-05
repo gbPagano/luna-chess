@@ -28,16 +28,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     for (b, a) in blockers.iter().zip(attack_masks) {
         let mut b_board = Board::new();
-        b_board.xor(*b, Piece::Pawn, Color::Black);
+        b_board.xor(Piece::Pawn, *b, Color::Black);
 
         let mut a_board = Board::new();
-        a_board.xor(a, piece, Color::White);
-        a_board.xor(BitBoard::from_square(square), piece, Color::White);
+        a_board.xor(piece, a, Color::White);
+        a_board.xor(piece, BitBoard::from_square(square), Color::White);
 
         println!("{:?}", b_board);
         println!("{:?}", a_board);
         println!("-----------");
     }
+
+    let square: Square = "a8".parse()?;
+    dbg!(square);
+
+    let square: Square = "e8".parse()?;
+    dbg!(square);
+
+    let square: Square = "h8".parse()?;
+    dbg!(square);
 
     Ok(())
 }

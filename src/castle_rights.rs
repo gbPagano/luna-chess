@@ -5,6 +5,7 @@ use std::str::FromStr;
 use crate::bitboard::BitBoard;
 use crate::color::Color;
 use crate::magic::{KINGSIDE_CASTLE_SQUARES, QUEENSIDE_CASTLE_SQUARES};
+use crate::square::Square;
 
 /// A struct representing the castling rights for both players in chess.
 /// It tracks whether each player has kingside and queenside castling rights.
@@ -37,6 +38,24 @@ impl CastleRights {
 
     pub fn queenside_squares(&self, color: Color) -> BitBoard {
         unsafe { *QUEENSIDE_CASTLE_SQUARES.get_unchecked(color.to_index()) }
+    }
+
+    pub fn update_from_square(&mut self, color: Color, square: Square) {
+        match (color, square.to_index()) {
+            (Color::White, 0) => self.white_queenside = false, // a1
+            (Color::White, 4) => {
+                self.white_queenside = false;
+                self.white_kingside = false;
+            } // e1
+            (Color::White, 7) => self.white_kingside = false,  // h1
+            (Color::Black, 56) => self.black_queenside = false, // a8
+            (Color::Black, 60) => {
+                self.black_queenside = false;
+                self.black_kingside = false;
+            } // e8
+            (Color::Black, 63) => self.black_kingside = false, // h8
+            _ => (),
+        }
     }
 }
 

@@ -1,7 +1,9 @@
 use crate::bitboard::BitBoard;
 use crate::castle_rights::CastleRights;
+use crate::chess_move::ChessMove;
 use crate::color::Color;
 use crate::file::{File, ALL_FILES};
+use crate::magic;
 use crate::pieces::{Piece, ALL_PIECES};
 use crate::rank::{Rank, ALL_RANKS};
 use crate::square::Square;
@@ -10,6 +12,7 @@ use anyhow::{bail, Error};
 use std::fmt;
 use std::str::FromStr;
 
+#[derive(Clone)]
 pub struct Board {
     pieces_bitboards: [BitBoard; 6],
     colors_bitboards: [BitBoard; 2],
@@ -36,10 +39,10 @@ impl Board {
 
     fn place_piece(&mut self, square: Square, piece: Piece, color: Color) {
         let bitboard = BitBoard::from_square(square);
-        self.xor(bitboard, piece, color);
+        self.xor(piece, bitboard, color);
     }
 
-    pub fn xor(&mut self, bitboard: BitBoard, piece: Piece, color: Color) {
+    pub fn xor(&mut self, piece: Piece, bitboard: BitBoard, color: Color) {
         self.pieces_bitboards[piece.to_index()] ^= bitboard;
         self.colors_bitboards[color.to_index()] ^= bitboard;
         self.combined_bitboard ^= bitboard;
@@ -133,6 +136,112 @@ impl Board {
 
     pub fn castle_rights(&self) -> CastleRights {
         self.castle_rights
+    }
+
+    pub fn make_move(&self, m: ChessMove) -> Board {
+        let mut result = self.clone();
+        result.checkers_bitboard = BitBoard(0);
+        result.pinned_bitboard = BitBoard(0);
+
+        let source_bb = BitBoard::from_square(m.source);
+        let dest_bb = BitBoard::from_square(m.dest);
+        let moved_piece = self.get_piece(m.source).unwrap();
+
+        result.xor(moved_piece, source_bb, self.side_to_move);
+        result.xor(moved_piece, dest_bb, self.side_to_move);
+        if let Some(captured) = self.get_piece(m.dest) {
+            result.xor(captured, dest_bb, !self.side_to_move);
+        }
+
+        result
+            .castle_rights
+            .update_from_square(!self.side_to_move, m.dest);
+        result
+            .castle_rights
+            .update_from_square(self.side_to_move, m.source);
+
+        let enemy_king =
+            self.get_piece_bitboard(Piece::King) & self.get_color_bitboard(!self.side_to_move);
+        let enemy_king_sq = enemy_king.to_square();
+
+        let move_bb = source_bb ^ dest_bb;
+        let has_castled =
+            moved_piece == Piece::King && (move_bb & magic::get_castle_squares()) == move_bb;
+
+        if moved_piece == Piece::Knight {
+            result.checkers_bitboard ^= magic::get_knight_moves(enemy_king_sq) & dest_bb;
+        } else if moved_piece == Piece::Pawn {
+            if let Some(Piece::Knight) = m.promotion {
+                result.xor(Piece::Pawn, dest_bb, self.side_to_move);
+                result.xor(Piece::Knight, dest_bb, self.side_to_move);
+                result.checkers_bitboard ^= magic::get_knight_moves(enemy_king_sq) & dest_bb;
+            } else if let Some(promotion) = m.promotion {
+                result.xor(Piece::Pawn, dest_bb, self.side_to_move);
+                result.xor(promotion, dest_bb, self.side_to_move);
+            } else if !(source_bb & magic::get_pawn_source_double_moves()).is_empty()
+                && !(dest_bb & magic::get_pawn_dest_double_moves()).is_empty()
+            {
+                result.en_passant = m.dest.backward(self.side_to_move);
+                result.checkers_bitboard ^=
+                    magic::get_pawn_attacks(enemy_king_sq, !self.side_to_move, dest_bb);
+            } else if Some(m.dest) == self.en_passant {
+                result.xor(
+                    Piece::Pawn,
+                    BitBoard::from_square(m.dest.forward(!self.side_to_move).unwrap()),
+                    !self.side_to_move,
+                );
+                result.checkers_bitboard ^=
+                    magic::get_pawn_attacks(enemy_king_sq, !self.side_to_move, dest_bb);
+            } else {
+                result.checkers_bitboard ^=
+                    magic::get_pawn_attacks(enemy_king_sq, !self.side_to_move, dest_bb);
+            }
+        } else if has_castled {
+            let backrank = match self.side_to_move {
+                Color::White => Rank::First,
+                Color::Black => Rank::Eighth,
+            };
+            let start_bb = BitBoard::set(
+                backrank,
+                match m.dest.get_file() {
+                    File::C | File::B => File::A,
+                    File::G => File::H,
+                    _ => unreachable!(),
+                },
+            );
+            let end_bb = BitBoard::set(
+                backrank,
+                match m.dest.get_file() {
+                    File::C | File::B => File::D,
+                    File::G => File::F,
+                    _ => unreachable!(),
+                },
+            );
+            result.xor(Piece::Rook, start_bb, self.side_to_move);
+            result.xor(Piece::Rook, end_bb, self.side_to_move);
+        }
+
+        let rays_attackers = result.get_color_bitboard(self.side_to_move)
+            & ((magic::get_bishop_rays(enemy_king_sq)
+                & (result.get_piece_bitboard(Piece::Bishop)
+                    | result.get_piece_bitboard(Piece::Queen)))
+                | (magic::get_rook_rays(enemy_king_sq)
+                    & (result.get_piece_bitboard(Piece::Rook)
+                        | result.get_piece_bitboard(Piece::Queen))));
+
+        for square in rays_attackers.get_squares() {
+            let between = magic::get_between(square, enemy_king_sq) & result.combined_bitboard;
+
+            if between.is_empty() {
+                result.checkers_bitboard ^= BitBoard::from_square(square);
+            } else if between.0.count_ones() == 1 {
+                result.pinned_bitboard ^= BitBoard::from_square(square);
+            }
+        }
+
+        result.en_passant = None;
+        result.side_to_move = !result.side_to_move;
+        result
     }
 }
 

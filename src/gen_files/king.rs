@@ -52,7 +52,7 @@ pub fn gen_king_moves() {
     gen_queenside_castle_squares();
 }
 
-fn castle_moves() -> BitBoard {
+fn castle_squares() -> BitBoard {
     BitBoard::from_square("c1".parse().unwrap())
         ^ BitBoard::from_square("c8".parse().unwrap())
         ^ BitBoard::from_square("e1".parse().unwrap())
@@ -90,8 +90,8 @@ pub fn write_king_moves(f: &mut std::fs::File) -> std::io::Result<()> {
 
     writeln!(
         f,
-        "const CASTLE_MOVES: BitBoard = BitBoard({});",
-        castle_moves().0
+        "const CASTLE_SQUARES: BitBoard = BitBoard({});",
+        castle_squares().0
     )?;
 
     Ok(())
