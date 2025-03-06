@@ -53,7 +53,7 @@ pub trait PieceMoves: AsPiece {
             }
         }
 
-        if T::IN_CHECK {
+        if !T::IN_CHECK {
             for square in (pieces & pinned).get_squares() {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
                     & magic::get_line(square, king_square);
@@ -176,10 +176,10 @@ impl PieceMoves for PawnMoves {
             }
         }
 
-        if T::IN_CHECK {
+        if !T::IN_CHECK {
             for square in (pieces & pinned).get_squares() {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
-                    & magic::get_line(square, king_square);
+                    & magic::get_line(king_square, square);
                 if !moves.is_empty() {
                     movelist.push(BitBoardMove::new(
                         square,
@@ -250,7 +250,7 @@ impl KingMoves {
 }
 impl PieceMoves for KingMoves {
     fn pseudo_legals(sq: Square, _: Color, _combined: BitBoard, mask: BitBoard) -> BitBoard {
-        magic::get_knight_moves(sq) & mask
+        magic::get_king_moves(sq) & mask
     }
 
     fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
