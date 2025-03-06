@@ -74,6 +74,8 @@ pub const ALL_PIECES: [Piece; 6] = [
     Piece::King,
 ];
 
+pub const PROMOTION_PIECES: [Piece; 4] = [Piece::Queen, Piece::Rook, Piece::Bishop, Piece::Knight];
+
 #[cfg(test)]
 mod tests {
     use super::*;

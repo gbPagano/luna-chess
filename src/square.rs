@@ -6,7 +6,7 @@ use std::fmt;
 use std::str::FromStr;
 
 /// Represents a square on a chessboard, identified by a rank and file.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Square(u8);
 
 impl Square {
@@ -113,7 +113,7 @@ impl FromStr for Square {
         let rank_char = chars.next().unwrap();
 
         let file = match file_char {
-            'a'..='h' => File::from_index(file_char as usize - b'a' as usize),
+            'a'..='h' => File::from_index(file_char as usize - 'a' as usize),
             _ => bail!("error"),
         };
 
@@ -135,6 +135,12 @@ impl fmt::Display for Square {
             (('a' as u8) + ((self.0 & 7) as u8)) as char,
             (('1' as u8) + ((self.0 >> 3) as u8)) as char
         )
+    }
+}
+
+impl fmt::Debug for Square {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_fmt(format_args!("{}", self))
     }
 }
 

@@ -6,12 +6,15 @@ build = "src/build.rs"
 
 [dependencies]
 anyhow = "1.0.95"
-rand = { version = "0.9.0", features = ["small_rng"] }
+rand = "0.9.0"
 
 [build-dependencies]
 anyhow = "1.0.95"
 rand = { version = "0.9.0", features = ["small_rng"] }
 
+
+[lib]
+crate-type = ["cdylib", "rlib"]
 
 [profile.release]
 opt-level = 3
