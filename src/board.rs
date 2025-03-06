@@ -23,6 +23,7 @@ pub struct Board {
     pinned_bitboard: BitBoard,
     checkers_bitboard: BitBoard,
 }
+
 impl Board {
     pub fn new() -> Self {
         Self {
@@ -56,20 +57,19 @@ impl Board {
         self.castle_rights = rights;
     }
 
-    fn set_en_passant(&mut self, square: Option<Square>) -> Result<(), Error> {
-        if let Some(s) = square {
-            if ![Rank::Third, Rank::Sixth].contains(&s.get_rank())
-                || s.get_rank() == Rank::Third && self.side_to_move == Color::White
-                || s.get_rank() == Rank::Sixth && self.side_to_move == Color::Black
-            {
-                bail!("invalid");
-            }
+    fn set_en_passant(&mut self, square: Square) {
+        // only set en_passatn if the pawn ca acttually be captured next move
+        if !(magic::get_adjacent_files(square.get_file())
+            & magic::get_rank_bitboard(square.forward(self.side_to_move).unwrap().get_rank())
+            & self.get_piece_bitboard(Piece::Pawn)
+            & self.get_color_bitboard(!self.side_to_move))
+        .is_empty()
+        {
+            self.en_passant = Some(square);
         }
-        self.en_passant = square;
-        Ok(())
     }
 
-    fn get_piece(&self, square: Square) -> Option<Piece> {
+    pub fn get_piece(&self, square: Square) -> Option<Piece> {
         let bitboard = BitBoard::from_square(square);
         if (self.combined_bitboard & bitboard).is_empty() {
             return None;
@@ -138,13 +138,51 @@ impl Board {
         self.castle_rights
     }
 
+    fn update_attacked_bitboards(&mut self) {
+        self.pinned_bitboard = BitBoard(0);
+        self.checkers_bitboard = BitBoard(0);
+
+        let king_square = (self.get_piece_bitboard(Piece::King)
+            & self.get_color_bitboard(self.side_to_move))
+        .to_square();
+
+        let pinners = self.get_color_bitboard(!self.side_to_move)
+            & ((magic::get_bishop_rays(king_square)
+                & (self.get_piece_bitboard(Piece::Bishop)
+                    | self.get_piece_bitboard(Piece::Queen)))
+                | (magic::get_rook_rays(king_square)
+                    & (self.get_piece_bitboard(Piece::Rook)
+                        | self.get_piece_bitboard(Piece::Queen))));
+
+        for sq in pinners.get_squares() {
+            let between = magic::get_between(sq, king_square) & self.get_combined_bitboard();
+            if between.is_empty() {
+                self.checkers_bitboard ^= BitBoard::from_square(sq);
+            } else if between.0.count_ones() == 1 {
+                self.pinned_bitboard ^= between;
+            }
+        }
+
+        self.checkers_bitboard ^= magic::get_knight_moves(king_square)
+            & self.get_color_bitboard(!self.side_to_move)
+            & self.get_piece_bitboard(Piece::Knight);
+
+        self.checkers_bitboard ^= magic::get_pawn_attacks(
+            king_square,
+            self.side_to_move,
+            self.get_color_bitboard(!self.side_to_move) & self.get_piece_bitboard(Piece::Pawn),
+        );
+    }
+
     pub fn make_move(&self, m: ChessMove) -> Board {
         let mut result = self.clone();
+        result.en_passant = None;
         result.checkers_bitboard = BitBoard(0);
         result.pinned_bitboard = BitBoard(0);
 
         let source_bb = BitBoard::from_square(m.source);
         let dest_bb = BitBoard::from_square(m.dest);
+
         let moved_piece = self.get_piece(m.source).unwrap();
 
         result.xor(moved_piece, source_bb, self.side_to_move);
@@ -181,7 +219,7 @@ impl Board {
             } else if !(source_bb & magic::get_pawn_source_double_moves()).is_empty()
                 && !(dest_bb & magic::get_pawn_dest_double_moves()).is_empty()
             {
-                result.en_passant = m.dest.backward(self.side_to_move);
+                result.set_en_passant(m.dest.backward(self.side_to_move).unwrap());
                 result.checkers_bitboard ^=
                     magic::get_pawn_attacks(enemy_king_sq, !self.side_to_move, dest_bb);
             } else if Some(m.dest) == self.en_passant {
@@ -235,11 +273,10 @@ impl Board {
             if between.is_empty() {
                 result.checkers_bitboard ^= BitBoard::from_square(square);
             } else if between.0.count_ones() == 1 {
-                result.pinned_bitboard ^= BitBoard::from_square(square);
+                result.pinned_bitboard ^= between;
             }
         }
 
-        result.en_passant = None;
         result.side_to_move = !result.side_to_move;
         result
     }
@@ -310,7 +347,13 @@ impl FromStr for Board {
         let rights = CastleRights::from_str(tokens[2])?;
         board.set_castling_rights(rights);
 
-        board.set_en_passant(Square::from_str(tokens[3]).ok())?;
+        if let Ok(sq) = Square::from_str(tokens[3]) {
+            board.side_to_move = !board.side_to_move;
+            board.set_en_passant(sq);
+            board.side_to_move = !board.side_to_move;
+        }
+
+        board.update_attacked_bitboards();
 
         Ok(board)
     }
@@ -404,23 +447,8 @@ mod tests {
             Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1").is_ok()
         );
         assert!(
-            Board::from_str("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e3 0 1").is_err()
-        );
-        assert!(
             Board::from_str("rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
                 .is_ok()
         );
-    }
-
-    #[test]
-    fn set_en_passant() {
-        let mut board = Board::default();
-        assert!(board.set_en_passant(Square::from_str("e6").ok()).is_ok());
-        assert!(board.set_en_passant(Square::from_str("e3").ok()).is_err());
-        board.set_side(Color::Black);
-        assert!(board.set_en_passant(Square::from_str("e3").ok()).is_ok());
-        assert!(board.set_en_passant(Square::from_str("e6").ok()).is_err());
-
-        assert!(board.set_en_passant(Square::from_str("e4").ok()).is_err());
     }
 }
