@@ -1,7 +1,7 @@
 use crate::file::File;
 use crate::rank::Rank;
 use crate::square::Square;
-use rand::Rng;
+
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, Not, Shr};
 
 /// Represents a 64-bit bitboard, where each bit corresponds to a square on a chessboard.
@@ -108,10 +108,10 @@ impl BitBoard {
         squares
     }
 
-    /// Generates a random `BitBoard` by combining random `u64` values.
-    pub fn random<R: Rng>(rng: &mut R) -> BitBoard {
-        BitBoard::new(rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>())
-    }
+    // Generates a random `BitBoard` by combining random `u64` values.
+    //pub fn random<R: Rng>(rng: &mut R) -> BitBoard {
+    //    BitBoard::new(rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>())
+    //}
 }
 
 #[cfg(test)]

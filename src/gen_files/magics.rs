@@ -1,13 +1,13 @@
-use std::fs::File;
-use std::io::Write;
-
 use super::attacks::gen_magic_attack_map;
 use super::rays::*;
 use crate::bitboard::BitBoard;
 use crate::pieces::Piece;
 use crate::square::Square;
 use rand::rngs::SmallRng;
+use rand::Rng;
 use rand::SeedableRng;
+use std::fs::File;
+use std::io::Write;
 
 pub fn magic_mask(square: Square, piece: Piece) -> BitBoard {
     get_rays(square, piece)
@@ -70,15 +70,15 @@ fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
         magic_number: BitBoard(0),
         mask,
         offset: new_offset as u32,
-        rightshift: (blockers.len().leading_zeros() + 1) as u8,
+        rightshift: ((blockers.len() as u64).leading_zeros() + 1) as u8,
     };
 
     // TODO: tranform this into unittest
-    debug_assert_eq!(blockers.len().count_ones(), 1);
-    debug_assert_eq!(blockers.len(), attacks.len());
+    assert_eq!(blockers.len().count_ones(), 1);
+    assert_eq!(blockers.len(), attacks.len());
 
-    debug_assert_eq!(blockers.iter().fold(BitBoard(0), |b, n| b | *n), mask);
-    debug_assert_eq!(
+    assert_eq!(blockers.iter().fold(BitBoard(0), |b, n| b | *n), mask);
+    assert_eq!(
         attacks.iter().fold(BitBoard(0), |b, n| b | *n),
         get_rays(square, piece)
     );
@@ -87,18 +87,19 @@ fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
 
     let mut done = false;
     while !done {
-        let magic_number = BitBoard::random(&mut rng);
+        let magic_number =
+            BitBoard::new(rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>());
 
-        //if (mask * magic_number).0.count_ones() < 6 {
-        //    continue;
-        //}
+        if (mask * magic_number).0.count_ones() < 6 {
+            continue;
+        }
         done = true;
 
         let mut new_attacks = vec![BitBoard(0); blockers.len()];
         for (i, &blocker) in blockers.iter().enumerate() {
             let j = ((magic_number * blocker) >> magic.rightshift).0 as usize;
             if new_attacks[j] == BitBoard(0) || new_attacks[j] == attacks[i] {
-                new_attacks[j] = new_attacks[i];
+                new_attacks[j] = attacks[i];
             } else {
                 done = false;
                 break;
