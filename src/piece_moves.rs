@@ -141,7 +141,7 @@ impl PawnMoves {
             return false;
         }
 
-        return true;
+        true
     }
 }
 impl PieceMoves for PawnMoves {

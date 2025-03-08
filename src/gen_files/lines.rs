@@ -4,34 +4,33 @@ use std::io::Write;
 use super::between::{are_squares_diagonal, are_squares_linear};
 use crate::bitboard::BitBoard;
 use crate::square::Square;
+use std::sync::LazyLock;
 
-static mut LINES: [[BitBoard; 64]; 64] = [[BitBoard(0); 64]; 64];
-
-pub fn gen_lines() {
+static LINES: LazyLock<[[BitBoard; 64]; 64]> = LazyLock::new(|| {
+    let mut lines = [[BitBoard(0); 64]; 64];
     for src in Square::all_squares() {
         for dest in Square::all_squares() {
-            unsafe {
-                if src == dest
-                    || (!are_squares_diagonal(&src, &dest) && !are_squares_linear(&src, &dest))
-                {
-                    continue;
-                }
-
-                LINES[src.to_index()][dest.to_index()] = Square::all_squares()
-                    .filter(|test| {
-                        if are_squares_diagonal(&src, &dest) {
-                            are_squares_diagonal(&src, test) && are_squares_diagonal(&dest, test)
-                        } else {
-                            is_on_straight_line(&src, test, &dest)
-                        }
-                    })
-                    .fold(BitBoard(0), |board, square| {
-                        board | BitBoard::from_square(square)
-                    });
+            if src == dest
+                || (!are_squares_diagonal(&src, &dest) && !are_squares_linear(&src, &dest))
+            {
+                continue;
             }
+
+            lines[src.to_index()][dest.to_index()] = Square::all_squares()
+                .filter(|test| {
+                    if are_squares_diagonal(&src, &dest) {
+                        are_squares_diagonal(&src, test) && are_squares_diagonal(&dest, test)
+                    } else {
+                        is_on_straight_line(&src, test, &dest)
+                    }
+                })
+                .fold(BitBoard(0), |board, square| {
+                    board | BitBoard::from_square(square)
+                });
         }
     }
-}
+    lines
+});
 
 fn is_on_straight_line(src: &Square, test: &Square, dest: &Square) -> bool {
     let src_rank = src.get_rank().to_index() as i8;
@@ -52,7 +51,7 @@ pub fn write_lines(f: &mut File) -> std::io::Result<()> {
     writeln!(f, "const LINES: [[BitBoard; 64]; 64] = [[")?;
     for i in 0..64 {
         for j in 0..64 {
-            unsafe { writeln!(f, "    BitBoard({}),", LINES[i][j].0)? };
+            writeln!(f, "    BitBoard({}),", LINES[i][j].0)?;
         }
         if i != 63 {
             writeln!(f, "  ], [")?;

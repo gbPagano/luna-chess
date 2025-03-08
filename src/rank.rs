@@ -42,8 +42,8 @@ impl Rank {
     }
 
     /// Returns the index (0-7) corresponding to the file.
-    pub fn to_index(&self) -> usize {
-        *self as usize
+    pub fn to_index(self) -> usize {
+        self as usize
     }
 
     /// Returns the rank below of current one, with wrap-around

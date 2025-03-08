@@ -85,7 +85,7 @@ impl BitBoard {
     }
 
     /// Convert a `BitBoard` to a `Square`. Returns the least-significant `Square`
-    pub fn to_square(&self) -> Square {
+    pub fn to_square(self) -> Square {
         Square::from_index(self.0.trailing_zeros() as u8)
     }
 

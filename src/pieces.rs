@@ -14,12 +14,12 @@ pub enum Piece {
 
 impl Piece {
     /// Returns the index [0-5] of the piece as a `usize`.
-    pub fn to_index(&self) -> usize {
-        *self as usize
+    pub fn to_index(self) -> usize {
+        self as usize
     }
 
     /// Returns the string representation of the piece, capitalized for white pieces.
-    pub fn to_string(&self, color: Color) -> String {
+    pub fn to_string(self, color: Color) -> String {
         let piece = format!("{}", self);
         if color == Color::White {
             piece.to_uppercase()
@@ -29,7 +29,7 @@ impl Piece {
     }
 
     /// Returns the Unicode chess symbol representing the piece.
-    pub fn to_symbol(&self, color: Color) -> &str {
+    pub fn to_symbol(self, color: Color) -> &'static str {
         match (self, color) {
             (Piece::Pawn, Color::White) => "♟",
             (Piece::Pawn, Color::Black) => "♙",

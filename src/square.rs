@@ -11,7 +11,7 @@ pub struct Square(u8);
 
 impl Square {
     pub fn new(rank: Rank, file: File) -> Self {
-        Square((rank.to_index() << 3 ^ file.to_index()) as u8)
+        Square(((rank.to_index() << 3) ^ file.to_index()) as u8)
     }
 
     /// Creates a `Square` from an index (0-63), ensuring it remains within bounds.
@@ -19,7 +19,7 @@ impl Square {
         Square(idx & 63)
     }
 
-    pub fn to_index(&self) -> usize {
+    pub fn to_index(self) -> usize {
         self.0 as usize
     }
 
@@ -132,8 +132,8 @@ impl fmt::Display for Square {
         write!(
             f,
             "{}{}",
-            (('a' as u8) + ((self.0 & 7) as u8)) as char,
-            (('1' as u8) + ((self.0 >> 3) as u8)) as char
+            (b'a' + (self.0 & 7)) as char,
+            (b'1' + (self.0 >> 3)) as char
         )
     }
 }

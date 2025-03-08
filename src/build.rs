@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+
+use anyhow::Result;
 use std::env;
 use std::fs::File;
 use std::path::Path;
@@ -12,16 +15,8 @@ mod square;
 
 use gen_files::*;
 
-fn main() -> std::io::Result<()> {
-    gen_rays();
+fn main() -> Result<()> {
     gen_all_magic();
-    gen_between();
-    gen_lines();
-    gen_knight_moves();
-    gen_king_moves();
-    gen_pawn_moves();
-    gen_pawn_attacks();
-    gen_chessboard_utils();
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let magic_path = Path::new(&out_dir).join("magic_file.rs");

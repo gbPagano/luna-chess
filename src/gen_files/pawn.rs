@@ -1,5 +1,6 @@
 use std::fs::File;
 use std::io::Write;
+use std::sync::LazyLock;
 
 use crate::bitboard::BitBoard;
 use crate::color::Color;
@@ -7,53 +8,46 @@ use crate::file::ALL_FILES;
 use crate::rank::Rank;
 use crate::square::Square;
 
-static mut PAWN_MOVES: [[BitBoard; 64]; 2] = [[BitBoard(0); 64]; 2];
-static mut PAWN_ATTACKS: [[BitBoard; 64]; 2] = [[BitBoard(0); 64]; 2];
-
-pub fn gen_pawn_moves() {
+static PAWN_MOVES: LazyLock<[[BitBoard; 64]; 2]> = LazyLock::new(|| {
+    let mut pawn_moves = [[BitBoard(0); 64]; 2];
     for color in [Color::White, Color::Black] {
         for square in Square::all_squares() {
-            unsafe {
-                if square.get_rank() == color.starting_rank().forward(color) {
-                    PAWN_MOVES[color.to_index()][square.to_index()] =
-                        BitBoard::from_square(square.forward(color).unwrap())
-                            ^ BitBoard::from_square(
-                                square.forward(color).unwrap().forward(color).unwrap(),
-                            );
-                } else {
-                    match square.forward(color) {
-                        None => PAWN_MOVES[color.to_index()][square.to_index()] = BitBoard(0),
-                        Some(x) => {
-                            PAWN_MOVES[color.to_index()][square.to_index()] =
-                                BitBoard::from_square(x)
-                        }
-                    };
-                }
-            }
-        }
-    }
-}
-
-pub fn gen_pawn_attacks() {
-    for color in [Color::White, Color::Black] {
-        for square in Square::all_squares() {
-            unsafe {
-                PAWN_ATTACKS[color.to_index()][square.to_index()] = BitBoard(0);
-
-                if let Some(f) = square.forward(color) {
-                    if let Some(fl) = f.left() {
-                        PAWN_ATTACKS[color.to_index()][square.to_index()] ^=
-                            BitBoard::from_square(fl)
-                    };
-                    if let Some(fr) = f.right() {
-                        PAWN_ATTACKS[color.to_index()][square.to_index()] ^=
-                            BitBoard::from_square(fr)
-                    };
+            if square.get_rank() == color.starting_rank().forward(color) {
+                pawn_moves[color.to_index()][square.to_index()] =
+                    BitBoard::from_square(square.forward(color).unwrap())
+                        ^ BitBoard::from_square(
+                            square.forward(color).unwrap().forward(color).unwrap(),
+                        );
+            } else {
+                match square.forward(color) {
+                    None => pawn_moves[color.to_index()][square.to_index()] = BitBoard(0),
+                    Some(x) => {
+                        pawn_moves[color.to_index()][square.to_index()] = BitBoard::from_square(x)
+                    }
                 };
             }
         }
     }
-}
+    pawn_moves
+});
+static PAWN_ATTACKS: LazyLock<[[BitBoard; 64]; 2]> = LazyLock::new(|| {
+    let mut pawn_attacks = [[BitBoard(0); 64]; 2];
+    for color in [Color::White, Color::Black] {
+        for square in Square::all_squares() {
+            pawn_attacks[color.to_index()][square.to_index()] = BitBoard(0);
+
+            if let Some(f) = square.forward(color) {
+                if let Some(fl) = f.left() {
+                    pawn_attacks[color.to_index()][square.to_index()] ^= BitBoard::from_square(fl)
+                };
+                if let Some(fr) = f.right() {
+                    pawn_attacks[color.to_index()][square.to_index()] ^= BitBoard::from_square(fr)
+                };
+            };
+        }
+    }
+    pawn_attacks
+});
 
 fn source_double_moves() -> BitBoard {
     let mut result = BitBoard(0);
@@ -77,15 +71,13 @@ fn dest_double_moves() -> BitBoard {
 
 pub fn write_pawn_moves(f: &mut File) -> std::io::Result<()> {
     writeln!(f, "const PAWN_MOVES: [[BitBoard; 64]; 2] = [[")?;
-    for i in 0..2 {
-        for j in 0..64 {
-            unsafe {
-                writeln!(f, "    BitBoard({}),", PAWN_MOVES[i][j].0)?;
-            };
-        }
-        if i != 1 {
-            writeln!(f, "  ], [")?;
-        }
+    for white_move in PAWN_MOVES[0].iter() {
+        writeln!(f, "    BitBoard({}),", white_move.0)?;
+    }
+    writeln!(f, "  ], [")?;
+
+    for black_move in PAWN_MOVES[1].iter() {
+        writeln!(f, "    BitBoard({}),", black_move.0)?;
     }
     writeln!(f, "]];")?;
 
@@ -94,15 +86,13 @@ pub fn write_pawn_moves(f: &mut File) -> std::io::Result<()> {
 
 pub fn write_pawn_attacks(f: &mut File) -> std::io::Result<()> {
     writeln!(f, "const PAWN_ATTACKS: [[BitBoard; 64]; 2] = [[")?;
-    for i in 0..2 {
-        for j in 0..64 {
-            unsafe {
-                writeln!(f, "    BitBoard({}),", PAWN_ATTACKS[i][j].0)?;
-            };
-        }
-        if i != 1 {
-            writeln!(f, "  ], [")?;
-        }
+    for white_attack in PAWN_ATTACKS[0].iter() {
+        writeln!(f, "    BitBoard({}),", white_attack.0)?;
+    }
+    writeln!(f, "  ], [")?;
+
+    for black_attack in PAWN_ATTACKS[1].iter() {
+        writeln!(f, "    BitBoard({}),", black_attack.0)?;
     }
     writeln!(f, "]];")?;
 

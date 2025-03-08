@@ -10,8 +10,8 @@ pub enum Color {
 
 impl Color {
     /// Returns the index [0-1] of the color as a `usize`.
-    pub fn to_index(&self) -> usize {
-        *self as usize
+    pub fn to_index(self) -> usize {
+        self as usize
     }
 
     pub fn promotion_rank(&self) -> Rank {

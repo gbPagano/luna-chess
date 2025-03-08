@@ -4,7 +4,7 @@ pub mod castle_rights;
 pub mod chess_move;
 pub mod color;
 pub mod file;
-//pub mod gen_files;
+pub mod gen_files;
 pub mod magic;
 pub mod movegen;
 pub mod piece_moves;

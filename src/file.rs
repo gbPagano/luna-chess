@@ -40,8 +40,8 @@ impl File {
     }
 
     /// Returns the index (0-7) corresponding to the file.
-    pub fn to_index(&self) -> usize {
-        *self as usize
+    pub fn to_index(self) -> usize {
+        self as usize
     }
 
     /// Returns the file to the left of current one, with wrap-around.

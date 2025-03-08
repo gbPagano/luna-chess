@@ -407,9 +407,9 @@ impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for rank in ALL_RANKS.iter().rev() {
             if *rank == Rank::Eighth {
-                write!(f, "  ╭───┬───┬───┬───┬───┬───┬───┬───╮\n")?;
+                writeln!(f, "  ╭───┬───┬───┬───┬───┬───┬───┬───╮")?;
             } else {
-                write!(f, "  ├───┼───┼───┼───┼───┼───┼───┼───┤\n")?;
+                writeln!(f, "  ├───┼───┼───┼───┼───┼───┼───┼───┤")?;
             }
             write!(f, "{}", rank.to_index() + 1)?;
 
@@ -422,9 +422,9 @@ impl fmt::Debug for Board {
                     write!(f, " ")?;
                 }
             }
-            write!(f, " │\n")?;
+            writeln!(f, " │")?;
         }
-        write!(f, "  ╰───┴───┴───┴───┴───┴───┴───┴───╯\n")?;
+        writeln!(f, "  ╰───┴───┴───┴───┴───┴───┴───┴───╯")?;
         write!(f, "    A   B   C   D   E   F   G   H  ")
     }
 }

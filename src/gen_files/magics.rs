@@ -8,6 +8,7 @@ use rand::Rng;
 use rand::SeedableRng;
 use std::fs::File;
 use std::io::Write;
+use std::sync::Mutex;
 
 pub fn magic_mask(square: Square, piece: Piece) -> BitBoard {
     get_rays(square, piece)
@@ -31,33 +32,36 @@ struct Magic {
     rightshift: u8,
 }
 
-static mut MAGIC_NUMBERS: [[Magic; 64]; 2] = [[Magic {
-    magic_number: BitBoard(0),
-    mask: BitBoard(0),
-    offset: 0,
-    rightshift: 0,
-}; 64]; 2]; // for rooks and bishops
+static MAGIC_NUMBERS: Mutex<[[Magic; 64]; 2]> = Mutex::new(
+    [[Magic {
+        magic_number: BitBoard(0),
+        mask: BitBoard(0),
+        offset: 0,
+        rightshift: 0,
+    }; 64]; 2],
+); // for rooks and bishops
 
 const NUM_MOVES: usize = 64 * (1<<12) /* Rook Moves */ +
                          64 * (1<<9) /* Bishop Moves */;
-static mut GEN_MOVES_SIZE: usize = 0;
-static mut MOVES: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
-static mut MOVE_RAYS: [BitBoard; NUM_MOVES] = [BitBoard(0); NUM_MOVES];
+static MOVES_MAX_IDX: Mutex<usize> = Mutex::new(0);
+static MOVES: Mutex<[BitBoard; NUM_MOVES]> = Mutex::new([BitBoard(0); NUM_MOVES]);
+static MOVE_RAYS: Mutex<[BitBoard; NUM_MOVES]> = Mutex::new([BitBoard(0); NUM_MOVES]);
 
 fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
     let (blockers, attacks) = gen_magic_attack_map(square, piece);
     let mask = magic_mask(square, piece);
 
-    let mut new_offset = curr_offset;
+    let mut move_rays = MOVE_RAYS.lock().unwrap();
+    let mut moves = MOVES.lock().unwrap();
+    let mut magic_numbers = MAGIC_NUMBERS.lock().unwrap();
 
+    let mut new_offset = curr_offset;
     for i in 0..curr_offset {
         let mut found = true;
         for j in 0..attacks.len() {
-            unsafe {
-                if MOVE_RAYS[i + j] & get_rays(square, piece) != BitBoard(0) {
-                    found = false;
-                    break;
-                }
+            if move_rays[i + j] & get_rays(square, piece) != BitBoard(0) {
+                found = false;
+                break;
             }
         }
         if found {
@@ -111,22 +115,19 @@ fn generate_magic(square: Square, piece: Piece, curr_offset: usize) -> usize {
         }
     }
 
-    unsafe {
-        MAGIC_NUMBERS[if piece == Piece::Rook { 0 } else { 1 }][square.to_index()] = magic;
+    magic_numbers[if piece == Piece::Rook { 0 } else { 1 }][square.to_index()] = magic;
 
-        for (i, &blocker) in blockers.iter().enumerate() {
-            let j = ((magic.magic_number * blocker) >> magic.rightshift).0 as usize;
-            MOVES[magic.offset as usize + j] |= attacks[i];
-            MOVE_RAYS[magic.offset as usize + j] |= get_rays(square, piece);
-        }
+    for (i, &blocker) in blockers.iter().enumerate() {
+        let j = ((magic.magic_number * blocker) >> magic.rightshift).0 as usize;
+        moves[magic.offset as usize + j] |= attacks[i];
+        move_rays[magic.offset as usize + j] |= get_rays(square, piece);
     }
-    let next_offset = if new_offset + attacks.len() < curr_offset {
+
+    if new_offset + attacks.len() < curr_offset {
         curr_offset
     } else {
         new_offset + attacks.len()
-    };
-
-    next_offset
+    }
 }
 
 pub fn gen_all_magic() {
@@ -136,56 +137,59 @@ pub fn gen_all_magic() {
             offset = generate_magic(square, *piece, offset);
         }
     }
-    unsafe {
-        GEN_MOVES_SIZE = offset;
-    }
-    dbg!(offset);
+    *MOVES_MAX_IDX.lock().unwrap() = offset;
+    dbg!(&MOVES_MAX_IDX);
 }
 
 pub fn write_magics(f: &mut File) {
-    let magic_struct = format!(
-        r#"#[derive(Copy, Clone)]
-struct Magic {{
+    let magic_struct = r#"#[derive(Copy, Clone)]
+struct Magic {
     magic_number: BitBoard,
     mask: BitBoard,
     offset: u32,
     rightshift: u8
-}}
+}
 "#
-    );
+    .to_string();
     writeln!(f, "{}", magic_struct).unwrap();
 
+    let magic_numbers = MAGIC_NUMBERS.lock().unwrap();
     writeln!(f, "const MAGIC_NUMBERS: [[Magic; 64]; 2] = [[").unwrap();
-    for i in 0..2 {
-        for j in 0..64 {
-            unsafe {
-                writeln!(f, "    Magic {{ magic_number: BitBoard({}), mask: BitBoard({}), offset: {}, rightshift: {} }},",
-                    MAGIC_NUMBERS[i][j].magic_number.0,
-                    MAGIC_NUMBERS[i][j].mask.0,
-                    MAGIC_NUMBERS[i][j].offset,
-                    MAGIC_NUMBERS[i][j].rightshift).unwrap();
-            }
-        }
-        if i != 1 {
-            writeln!(f, "], [").unwrap();
-        }
+    for rook_magic in magic_numbers[0].iter() {
+        writeln!(f, "    Magic {{ magic_number: BitBoard({}), mask: BitBoard({}), offset: {}, rightshift: {} }},",
+            rook_magic.magic_number.0,
+            rook_magic.mask.0,
+            rook_magic.offset,
+            rook_magic.rightshift
+        ).unwrap();
+    }
+
+    writeln!(f, "], [").unwrap();
+    for bishop_magic in magic_numbers[1].iter() {
+        writeln!(f, "    Magic {{ magic_number: BitBoard({}), mask: BitBoard({}), offset: {}, rightshift: {} }},",
+            bishop_magic.magic_number.0,
+            bishop_magic.mask.0,
+            bishop_magic.offset,
+            bishop_magic.rightshift
+        ).unwrap();
     }
     writeln!(f, "]];").unwrap();
 
-    unsafe {
-        writeln!(f, "const MOVES: [BitBoard; {}] = [", GEN_MOVES_SIZE).unwrap();
-        for i in 0..GEN_MOVES_SIZE {
-            writeln!(f, "    BitBoard({}),", MOVES[i].0).unwrap();
-        }
+    writeln!(
+        f,
+        "const MOVES: [BitBoard; {}] = [",
+        MOVES_MAX_IDX.lock().unwrap()
+    )
+    .unwrap();
+    let moves = MOVES.lock().unwrap();
+    for move_bb in moves.iter().take(*MOVES_MAX_IDX.lock().unwrap()) {
+        writeln!(f, "    BitBoard({}),", move_bb.0).unwrap();
     }
     writeln!(f, "];").unwrap();
 }
 
 #[test]
 fn name() {
-    gen_rook_rays();
-    gen_bishop_rays();
-
     //find_magic("c3".parse().unwrap(), Piece::Rook, 0);
 
     gen_all_magic();

@@ -2,11 +2,10 @@ use super::piece_moves::*;
 use crate::bitboard::BitBoard;
 use crate::board::Board;
 use crate::chess_move::ChessMove;
-use crate::pieces::{Piece, PROMOTION_PIECES};
+use crate::pieces::PROMOTION_PIECES;
 use crate::square::Square;
 
 use std::iter::ExactSizeIterator;
-use std::mem;
 
 #[derive(Copy, Clone)]
 pub struct BitBoardMove {
@@ -30,7 +29,6 @@ pub type MoveList = Vec<BitBoardMove>;
 pub struct MoveGen {
     moves: MoveList,
     promotion_idx: usize,
-    iter_mask: BitBoard,
     idx: usize,
 }
 
@@ -41,21 +39,21 @@ impl MoveGen {
         let mut movelist: MoveList = Vec::new();
 
         if checkers.is_empty() {
-            PawnMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            KnightMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            BishopMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            RookMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            QueenMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
-            KingMoves::legals::<NotInCheck>(&mut movelist, &board, mask);
+            PawnMoves::legals::<NotInCheck>(&mut movelist, board, mask);
+            KnightMoves::legals::<NotInCheck>(&mut movelist, board, mask);
+            BishopMoves::legals::<NotInCheck>(&mut movelist, board, mask);
+            RookMoves::legals::<NotInCheck>(&mut movelist, board, mask);
+            QueenMoves::legals::<NotInCheck>(&mut movelist, board, mask);
+            KingMoves::legals::<NotInCheck>(&mut movelist, board, mask);
         } else if checkers.0.count_ones() == 1 {
-            PawnMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            KnightMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            BishopMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            RookMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            QueenMoves::legals::<InCheck>(&mut movelist, &board, mask);
-            KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            PawnMoves::legals::<InCheck>(&mut movelist, board, mask);
+            KnightMoves::legals::<InCheck>(&mut movelist, board, mask);
+            BishopMoves::legals::<InCheck>(&mut movelist, board, mask);
+            RookMoves::legals::<InCheck>(&mut movelist, board, mask);
+            QueenMoves::legals::<InCheck>(&mut movelist, board, mask);
+            KingMoves::legals::<InCheck>(&mut movelist, board, mask);
         } else {
-            KingMoves::legals::<InCheck>(&mut movelist, &board, mask);
+            KingMoves::legals::<InCheck>(&mut movelist, board, mask);
         }
 
         movelist
@@ -65,7 +63,6 @@ impl MoveGen {
         MoveGen {
             moves: MoveGen::enumerate_moves(board),
             promotion_idx: 0,
-            iter_mask: !BitBoard(0),
             idx: 0,
         }
     }
@@ -78,7 +75,6 @@ impl MoveGen {
             movements.len()
         } else {
             for m in movements {
-                //dbg!((m, board));
                 let board = board.make_move(m);
                 result += MoveGen::perft_test(&board, depth - 1);
             }
@@ -196,38 +192,22 @@ mod tests {
 
     #[test]
     fn movegen_perft_9() {
-        movegen_perft_test(
-            "r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1",
-            4,
-            1274206,
-        );
+        movegen_perft_test("r3k2r/1b4bq/8/8/8/8/7B/R3K2R w KQkq - 0 1", 4, 1274206);
     }
 
     #[test]
     fn movegen_perft_10() {
-        movegen_perft_test(
-            "r3k2r/7b/8/8/8/8/1B4BQ/R3K2R b KQkq - 0 1",
-            4,
-            1274206,
-        );
+        movegen_perft_test("r3k2r/7b/8/8/8/8/1B4BQ/R3K2R b KQkq - 0 1", 4, 1274206);
     }
 
     #[test]
     fn movegen_perft_11() {
-        movegen_perft_test(
-            "r3k2r/8/3Q4/8/8/5q2/8/R3K2R b KQkq - 0 1",
-            4,
-            1720476,
-        );
+        movegen_perft_test("r3k2r/8/3Q4/8/8/5q2/8/R3K2R b KQkq - 0 1", 4, 1720476);
     }
 
     #[test]
     fn movegen_perft_12() {
-        movegen_perft_test(
-            "r3k2r/8/5Q2/8/8/3q4/8/R3K2R w KQkq - 0 1",
-            4,
-            1720476,
-        );
+        movegen_perft_test("r3k2r/8/5Q2/8/8/3q4/8/R3K2R w KQkq - 0 1", 4, 1720476);
     }
 
     #[test]

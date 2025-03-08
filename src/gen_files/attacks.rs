@@ -9,9 +9,9 @@ pub fn gen_blocker_combinations(mask: BitBoard) -> Vec<BitBoard> {
 
     for i in 0..(1u64 << squares.len()) {
         let mut current = BitBoard(0);
-        for j in 0..squares.len() {
+        for (j, sq) in squares.iter().enumerate() {
             if (i & (1u64 << j)) == (1u64 << j) {
-                current |= BitBoard::from_square(squares[j as usize]);
+                current |= BitBoard::from_square(*sq);
             }
         }
         result.push(current);
@@ -28,10 +28,10 @@ pub fn gen_magic_attack_map(square: Square, piece: Piece) -> (Vec<BitBoard>, Vec
     let directions: Vec<fn(Square) -> Option<_>> = match piece {
         Piece::Rook => vec![|s| s.left(), |s| s.right(), |s| s.up(), |s| s.down()],
         Piece::Bishop => vec![
-            |s| s.left().map_or(None, |s| s.up()),
-            |s| s.right().map_or(None, |s| s.up()),
-            |s| s.left().map_or(None, |s| s.down()),
-            |s| s.right().map_or(None, |s| s.down()),
+            |s| s.left().and_then(|s| s.up()),
+            |s| s.right().and_then(|s| s.up()),
+            |s| s.left().and_then(|s| s.down()),
+            |s| s.right().and_then(|s| s.down()),
         ],
         _ => panic!("Magic only for Rooks and Bishops"),
     };

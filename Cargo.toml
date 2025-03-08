@@ -39,3 +39,6 @@ harness = false
 [[bench]]
 name = "alloc"
 harness = false
+
+[lints.clippy]
+large_const_arrays = "allow"
