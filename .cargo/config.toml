@@ -1,0 +1,4 @@
+[alias]
+quick-bench = "bench --bench perft -- --quick --quiet"
+qbench = "quick-bench"
+benchq = "quick-bench"

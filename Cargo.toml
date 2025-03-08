@@ -12,13 +12,8 @@ rand = "0.9.0"
 anyhow = "1.0.95"
 rand = { version = "0.9.0", features = ["small_rng"] }
 
-
-[lib]
-crate-type = ["cdylib", "rlib"]
-
 [profile.release]
 opt-level = 3
-debug = false
 
 [profile.dev]
 opt-level = 3
@@ -26,3 +21,21 @@ debug = true
 
 [profile.test]
 opt-level = 3
+
+[profile.bench]
+opt-level = 3
+debug = true
+strip = false
+
+
+[dev-dependencies]
+criterion = "0.5.1"
+divan = "0.1.17"
+
+[[bench]]
+name = "perft"
+harness = false
+
+[[bench]]
+name = "alloc"
+harness = false
