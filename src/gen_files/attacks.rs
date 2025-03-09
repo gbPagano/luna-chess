@@ -5,7 +5,7 @@ use crate::square::Square;
 
 pub fn gen_blocker_combinations(mask: BitBoard) -> Vec<BitBoard> {
     let mut result = vec![];
-    let squares = mask.get_squares();
+    let squares: Vec<_> = mask.get_squares().collect();
 
     for i in 0..(1u64 << squares.len()) {
         let mut current = BitBoard(0);

@@ -94,24 +94,21 @@ impl BitBoard {
         BitBoard::from_square(Square::new(rank, file))
     }
 
-    /// Returns a `Vec<Square>` containing all the squares that are set in the `BitBoard`.
-    pub fn get_squares(&self) -> Vec<Square> {
-        let mut squares = Vec::new();
+    /// Returns a `Iterator<Square>` containing all the squares that are set in the `BitBoard`.
+    pub fn get_squares(&self) -> impl Iterator<Item = Square> {
         let mut bb = self.0;
 
-        while bb != 0 {
-            let idx = bb.trailing_zeros() as u8;
-            squares.push(Square::from_index(idx));
-            bb &= bb - 1;
-        }
-
-        squares
+        std::iter::from_fn(move || {
+            if bb == 0 {
+                None
+            } else {
+                let idx = bb.trailing_zeros() as u8;
+                bb &= bb - 1;
+                Some(Square::from_index(idx))
+            }
+        })
     }
 
-    // Generates a random `BitBoard` by combining random `u64` values.
-    //pub fn random<R: Rng>(rng: &mut R) -> BitBoard {
-    //    BitBoard::new(rng.random::<u64>() & rng.random::<u64>() & rng.random::<u64>())
-    //}
 }
 
 #[cfg(test)]
