@@ -5,6 +5,7 @@ use crate::chess_move::ChessMove;
 use crate::pieces::PROMOTION_PIECES;
 use crate::square::Square;
 
+use arrayvec::ArrayVec;
 use std::iter::ExactSizeIterator;
 
 #[derive(Copy, Clone)]
@@ -24,7 +25,7 @@ impl BitBoardMove {
     }
 }
 
-pub type MoveList = Vec<BitBoardMove>;
+pub type MoveList = ArrayVec<BitBoardMove, 32>;
 
 pub struct MoveGen {
     moves: MoveList,
@@ -36,7 +37,7 @@ impl MoveGen {
     fn enumerate_moves(board: &Board) -> MoveList {
         let checkers = board.get_checkers_bitboard();
         let mask = !board.get_color_bitboard(board.side_to_move());
-        let mut movelist: MoveList = Vec::new();
+        let mut movelist: MoveList = ArrayVec::new();
 
         if checkers.is_empty() {
             PawnMoves::legals::<NotInCheck>(&mut movelist, board, mask);
@@ -141,6 +142,14 @@ mod tests {
     fn movegen_perft_test(fen: &str, depth: usize, result: usize) {
         let board: Board = fen.parse().unwrap();
         assert_eq!(MoveGen::perft_test(&board, depth), result);
+    }
+
+    #[test]
+    fn movegen_max_movents() {
+        let fen = "R6R/3Q4/1Q4Q1/4Q3/2Q4Q/Q4Q2/pp1Q4/kBNN1KB1 w - - 0 1";
+        let board: Board = fen.parse().unwrap();
+        let movements = MoveGen::new_legal(&board);
+        assert_eq!(movements.len(), 218);
     }
 
     #[test]

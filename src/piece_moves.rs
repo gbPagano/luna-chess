@@ -49,7 +49,9 @@ pub trait PieceMoves: AsPiece {
         for square in (pieces & !pinned).get_squares() {
             let moves = Self::pseudo_legals(square, color, combined, mask) & check_mask;
             if !moves.is_empty() {
-                movelist.push(BitBoardMove::new(square, moves, false));
+                unsafe {
+                    movelist.push_unchecked(BitBoardMove::new(square, moves, false));
+                }
             }
         }
 
@@ -58,7 +60,9 @@ pub trait PieceMoves: AsPiece {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
                     & magic::get_line(square, king_square);
                 if !moves.is_empty() {
-                    movelist.push(BitBoardMove::new(square, moves, false));
+                    unsafe {
+                        movelist.push_unchecked(BitBoardMove::new(square, moves, false));
+                    }
                 }
             }
         }
@@ -168,11 +172,13 @@ impl PieceMoves for PawnMoves {
         for square in (pieces & !pinned).get_squares() {
             let moves = Self::pseudo_legals(square, color, combined, mask) & check_mask;
             if !moves.is_empty() {
-                movelist.push(BitBoardMove::new(
-                    square,
-                    moves,
-                    square.get_rank() == color.pre_promotion_rank(),
-                ));
+                unsafe {
+                    movelist.push_unchecked(BitBoardMove::new(
+                        square,
+                        moves,
+                        square.get_rank() == color.pre_promotion_rank(),
+                    ));
+                }
             }
         }
 
@@ -181,11 +187,13 @@ impl PieceMoves for PawnMoves {
                 let moves = Self::pseudo_legals(square, color, combined, mask)
                     & magic::get_line(king_square, square);
                 if !moves.is_empty() {
-                    movelist.push(BitBoardMove::new(
-                        square,
-                        moves,
-                        square.get_rank() == color.pre_promotion_rank(),
-                    ));
+                    unsafe {
+                        movelist.push_unchecked(BitBoardMove::new(
+                            square,
+                            moves,
+                            square.get_rank() == color.pre_promotion_rank(),
+                        ));
+                    }
                 }
             }
         }
@@ -195,11 +203,13 @@ impl PieceMoves for PawnMoves {
             let files = magic::get_adjacent_files(ep_square.get_file());
             for square in (rank & files & pieces).get_squares() {
                 if PawnMoves::legal_ep_move(board, square, ep_square) {
-                    movelist.push(BitBoardMove::new(
-                        square,
-                        BitBoard::from_square(ep_square),
-                        false,
-                    ));
+                    unsafe {
+                        movelist.push_unchecked(BitBoardMove::new(
+                            square,
+                            BitBoard::from_square(ep_square),
+                            false,
+                        ));
+                    }
                 }
             }
         }
@@ -288,7 +298,9 @@ impl PieceMoves for KingMoves {
         }
 
         if !moves.is_empty() {
-            movelist.push(BitBoardMove::new(king_square, moves, false));
+            unsafe {
+                movelist.push_unchecked(BitBoardMove::new(king_square, moves, false));
+            }
         }
     }
 }

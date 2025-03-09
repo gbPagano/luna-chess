@@ -9,6 +9,5 @@ fn main() {
     let start = Instant::now();
     let _ = MoveGen::perft_test(&board, depth);
     let duration = start.elapsed();
-
     println!("Perft {depth} in: {:?}", duration);
 }
