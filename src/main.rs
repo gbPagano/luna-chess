@@ -1,10 +1,12 @@
 use luna_chess::board::Board;
 use luna_chess::movegen::MoveGen;
+use std::env;
 use std::time::Instant;
 
 fn main() {
+    let depth = env::args().nth(1).and_then(|s| s.parse().ok()).unwrap_or(6);
+
     let board = Board::default();
-    let depth = 6;
 
     let start = Instant::now();
     let _ = MoveGen::perft_test(&board, depth);

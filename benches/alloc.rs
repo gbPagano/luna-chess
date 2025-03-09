@@ -1,4 +1,4 @@
-use divan::{black_box, AllocProfiler, Bencher};
+use divan::{AllocProfiler, Bencher, black_box};
 use luna_chess::board::Board;
 use luna_chess::movegen::MoveGen;
 

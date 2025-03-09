@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::file::File;
 use crate::rank::Rank;
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use std::fmt;
 use std::str::FromStr;
 

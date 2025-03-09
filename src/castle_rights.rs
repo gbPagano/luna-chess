@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use std::fmt;
 use std::str::FromStr;
 

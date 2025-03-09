@@ -110,7 +110,7 @@ impl BitBoard {
 
     /// Returns a `Iterator<Square>` containing all the squares that are set in the `BitBoard`.
     #[inline(always)]
-    pub fn get_squares(&self) -> impl Iterator<Item = Square> {
+    pub fn get_squares(&self) -> impl Iterator<Item = Square> + use<> {
         let mut bb = self.0;
 
         std::iter::from_fn(move || {
@@ -123,7 +123,6 @@ impl BitBoard {
             }
         })
     }
-
 }
 
 #[cfg(test)]

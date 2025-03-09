@@ -2,13 +2,13 @@ use crate::bitboard::BitBoard;
 use crate::castle_rights::CastleRights;
 use crate::chess_move::ChessMove;
 use crate::color::Color;
-use crate::file::{File, ALL_FILES};
+use crate::file::{ALL_FILES, File};
 use crate::magic;
-use crate::pieces::{Piece, ALL_PIECES};
-use crate::rank::{Rank, ALL_RANKS};
+use crate::pieces::{ALL_PIECES, Piece};
+use crate::rank::{ALL_RANKS, Rank};
 use crate::square::Square;
 
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 use std::fmt;
 use std::str::FromStr;
 
