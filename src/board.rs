@@ -25,6 +25,7 @@ pub struct Board {
 }
 
 impl Board {
+    #[inline(always)]
     pub fn new() -> Self {
         Self {
             pieces_bitboards: [BitBoard::new(0); 6],
@@ -38,25 +39,30 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     fn place_piece(&mut self, square: Square, piece: Piece, color: Color) {
         let bitboard = BitBoard::from_square(square);
         self.xor(piece, bitboard, color);
     }
 
+    #[inline(always)]
     pub fn xor(&mut self, piece: Piece, bitboard: BitBoard, color: Color) {
         self.pieces_bitboards[piece.to_index()] ^= bitboard;
         self.colors_bitboards[color.to_index()] ^= bitboard;
         self.combined_bitboard ^= bitboard;
     }
 
+    #[inline(always)]
     fn set_side(&mut self, color: Color) {
         self.side_to_move = color;
     }
 
+    #[inline(always)]
     fn set_castling_rights(&mut self, rights: CastleRights) {
         self.castle_rights = rights;
     }
 
+    #[inline(always)]
     fn set_en_passant(&mut self, square: Square) {
         // only set en_passatn if the pawn ca acttually be captured next move
         if !(magic::get_adjacent_files(square.get_file())
@@ -69,6 +75,7 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     pub fn get_piece(&self, square: Square) -> Option<Piece> {
         let bitboard = BitBoard::from_square(square);
         if (self.combined_bitboard & bitboard).is_empty() {
@@ -85,6 +92,7 @@ impl Board {
         None
     }
 
+    #[inline(always)]
     fn get_color(&self, square: Square) -> Option<Color> {
         let bitboard = BitBoard::from_square(square);
         if !(self.colors_bitboards[Color::White.to_index()] & bitboard).is_empty() {
@@ -96,48 +104,59 @@ impl Board {
         }
     }
 
+    #[inline(always)]
     fn get_piece_and_color(&self, square: Square) -> Option<(Piece, Color)> {
         let piece = self.get_piece(square)?;
         let color = self.get_color(square)?;
         Some((piece, color))
     }
 
+    #[inline(always)]
     pub fn get_piece_bitboard(&self, piece: Piece) -> BitBoard {
         self.pieces_bitboards[piece.to_index()]
     }
 
+    #[inline(always)]
     pub fn get_combined_bitboard(&self) -> BitBoard {
         self.combined_bitboard
     }
 
+    #[inline(always)]
     pub fn side_to_move(&self) -> Color {
         self.side_to_move
     }
 
+    #[inline(always)]
     pub fn get_color_bitboard(&self, color: Color) -> BitBoard {
         self.colors_bitboards[color.to_index()]
     }
 
+    #[inline(always)]
     pub fn get_king_square(&self, color: Color) -> Square {
         (self.get_piece_bitboard(Piece::King) & self.get_color_bitboard(color)).to_square()
     }
 
+    #[inline(always)]
     pub fn get_pinned_bitboard(&self) -> BitBoard {
         self.pinned_bitboard
     }
 
+    #[inline(always)]
     pub fn get_checkers_bitboard(&self) -> BitBoard {
         self.checkers_bitboard
     }
 
+    #[inline(always)]
     pub fn en_passant(&self) -> Option<Square> {
         self.en_passant
     }
 
+    #[inline(always)]
     pub fn castle_rights(&self) -> CastleRights {
         self.castle_rights
     }
 
+    #[inline(always)]
     fn update_attacked_bitboards(&mut self) {
         self.pinned_bitboard = BitBoard(0);
         self.checkers_bitboard = BitBoard(0);
@@ -174,6 +193,7 @@ impl Board {
         );
     }
 
+    #[inline(always)]
     pub fn make_move(&self, m: ChessMove) -> Board {
         let mut result = self.clone();
         result.en_passant = None;

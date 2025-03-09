@@ -10,6 +10,7 @@ pub struct BitBoard(pub u64);
 
 impl BitAnd for BitBoard {
     type Output = Self;
+    #[inline(always)]
     fn bitand(self, rhs: Self) -> Self::Output {
         BitBoard(self.0 & rhs.0)
     }
@@ -17,6 +18,7 @@ impl BitAnd for BitBoard {
 
 impl BitOr for BitBoard {
     type Output = Self;
+    #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
         BitBoard(self.0 | rhs.0)
     }
@@ -24,6 +26,7 @@ impl BitOr for BitBoard {
 
 impl BitXor for BitBoard {
     type Output = Self;
+    #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         BitBoard(self.0 ^ rhs.0)
     }
@@ -31,24 +34,28 @@ impl BitXor for BitBoard {
 
 impl Not for BitBoard {
     type Output = Self;
+    #[inline(always)]
     fn not(self) -> Self::Output {
         BitBoard(!self.0)
     }
 }
 
 impl BitAndAssign for BitBoard {
+    #[inline(always)]
     fn bitand_assign(&mut self, rhs: Self) {
         self.0 &= rhs.0;
     }
 }
 
 impl BitOrAssign for BitBoard {
+    #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
         self.0 |= rhs.0;
     }
 }
 
 impl BitXorAssign for BitBoard {
+    #[inline(always)]
     fn bitxor_assign(&mut self, rhs: Self) {
         self.0 ^= rhs.0;
     }
@@ -57,6 +64,7 @@ impl BitXorAssign for BitBoard {
 impl Mul for BitBoard {
     type Output = BitBoard;
 
+    #[inline(always)]
     fn mul(self, rhs: BitBoard) -> BitBoard {
         BitBoard(self.0.wrapping_mul(rhs.0))
     }
@@ -65,36 +73,43 @@ impl Mul for BitBoard {
 impl Shr<u8> for BitBoard {
     type Output = Self;
 
+    #[inline(always)]
     fn shr(self, rhs: u8) -> Self::Output {
         BitBoard(self.0 >> rhs)
     }
 }
 
 impl BitBoard {
+    #[inline(always)]
     pub fn new(val: u64) -> BitBoard {
         BitBoard(val)
     }
 
+    #[inline(always)]
     pub fn is_empty(&self) -> bool {
         self.0 == 0
     }
 
     /// Converts a `Square` into a `BitBoard` with a single bit set corresponding to the square.
+    #[inline(always)]
     pub fn from_square(tile: Square) -> BitBoard {
         BitBoard(1u64 << tile.to_index())
     }
 
     /// Convert a `BitBoard` to a `Square`. Returns the least-significant `Square`
+    #[inline(always)]
     pub fn to_square(self) -> Square {
         Square::from_index(self.0.trailing_zeros() as u8)
     }
 
     /// Creates a `BitBoard` from a specific rank and file.
+    #[inline(always)]
     pub fn set(rank: Rank, file: File) -> BitBoard {
         BitBoard::from_square(Square::new(rank, file))
     }
 
     /// Returns a `Iterator<Square>` containing all the squares that are set in the `BitBoard`.
+    #[inline(always)]
     pub fn get_squares(&self) -> impl Iterator<Item = Square> {
         let mut bb = self.0;
 

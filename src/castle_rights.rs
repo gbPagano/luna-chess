@@ -18,6 +18,7 @@ pub struct CastleRights {
 }
 
 impl CastleRights {
+    #[inline(always)]
     pub fn has_kingside(&self, color: Color) -> bool {
         match color {
             Color::White => self.white_kingside,
@@ -25,6 +26,7 @@ impl CastleRights {
         }
     }
 
+    #[inline(always)]
     pub fn has_queenside(&self, color: Color) -> bool {
         match color {
             Color::White => self.white_queenside,
@@ -32,14 +34,17 @@ impl CastleRights {
         }
     }
 
+    #[inline(always)]
     pub fn kingside_squares(&self, color: Color) -> BitBoard {
         unsafe { *KINGSIDE_CASTLE_SQUARES.get_unchecked(color.to_index()) }
     }
 
+    #[inline(always)]
     pub fn queenside_squares(&self, color: Color) -> BitBoard {
         unsafe { *QUEENSIDE_CASTLE_SQUARES.get_unchecked(color.to_index()) }
     }
 
+    #[inline(always)]
     pub fn update_from_square(&mut self, color: Color, square: Square) {
         match (color, square.to_index()) {
             (Color::White, 0) => self.white_queenside = false, // a1

@@ -14,6 +14,7 @@ pub enum Piece {
 
 impl Piece {
     /// Returns the index [0-5] of the piece as a `usize`.
+    #[inline(always)]
     pub fn to_index(self) -> usize {
         self as usize
     }

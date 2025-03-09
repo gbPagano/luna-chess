@@ -10,10 +10,12 @@ pub enum Color {
 
 impl Color {
     /// Returns the index [0-1] of the color as a `usize`.
+    #[inline(always)]
     pub fn to_index(self) -> usize {
         self as usize
     }
 
+    #[inline(always)]
     pub fn promotion_rank(&self) -> Rank {
         match self {
             Color::White => Rank::Eighth,
@@ -21,6 +23,7 @@ impl Color {
         }
     }
 
+    #[inline(always)]
     pub fn pre_promotion_rank(&self) -> Rank {
         match self {
             Color::White => Rank::Seventh,
@@ -28,6 +31,7 @@ impl Color {
         }
     }
 
+    #[inline(always)]
     pub fn starting_rank(&self) -> Rank {
         match self {
             Color::White => Rank::First,
@@ -38,6 +42,7 @@ impl Color {
 impl Not for Color {
     type Output = Self;
 
+    #[inline(always)]
     fn not(self) -> Self::Output {
         match self {
             Color::White => Color::Black,

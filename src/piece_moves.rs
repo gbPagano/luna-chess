@@ -30,6 +30,7 @@ impl CheckStatus for NotInCheck {
 pub trait PieceMoves: AsPiece {
     fn pseudo_legals(square: Square, color: Color, combined: BitBoard, mask: BitBoard) -> BitBoard;
 
+    #[inline(always)]
     fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
         let combined = board.get_combined_bitboard();
         let color = board.side_to_move();
@@ -71,6 +72,7 @@ pub trait PieceMoves: AsPiece {
 
 pub struct RookMoves;
 impl PieceMoves for RookMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
         magic::get_rook_moves(sq, combined) & mask
     }
@@ -81,6 +83,7 @@ impl AsPiece for RookMoves {
 
 pub struct BishopMoves;
 impl PieceMoves for BishopMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
         magic::get_bishop_moves(sq, combined) & mask
     }
@@ -91,6 +94,7 @@ impl AsPiece for BishopMoves {
 
 pub struct QueenMoves;
 impl PieceMoves for QueenMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, _: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
         (magic::get_rook_moves(sq, combined) ^ magic::get_bishop_moves(sq, combined)) & mask
     }
@@ -101,6 +105,7 @@ impl AsPiece for QueenMoves {
 
 pub struct KnightMoves;
 impl PieceMoves for KnightMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, _: Color, _combined: BitBoard, mask: BitBoard) -> BitBoard {
         magic::get_knight_moves(sq) & mask
     }
@@ -111,6 +116,7 @@ impl AsPiece for KnightMoves {
 
 pub struct PawnMoves;
 impl PawnMoves {
+    #[inline(always)]
     pub fn legal_ep_move(board: &Board, source: Square, dest: Square) -> bool {
         let captured_pawn = board
             .en_passant()
@@ -149,10 +155,12 @@ impl PawnMoves {
     }
 }
 impl PieceMoves for PawnMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, color: Color, combined: BitBoard, mask: BitBoard) -> BitBoard {
         magic::get_pawn_moves(sq, color, combined) & mask
     }
 
+    #[inline(always)]
     fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
         let combined = board.get_combined_bitboard();
         let color = board.side_to_move();
@@ -221,6 +229,7 @@ impl AsPiece for PawnMoves {
 
 pub struct KingMoves;
 impl KingMoves {
+    #[inline(always)]
     pub fn legal_move(board: &Board, dest: Square) -> bool {
         let combined = board.get_combined_bitboard()
             ^ (board.get_piece_bitboard(Piece::King)
@@ -259,10 +268,12 @@ impl KingMoves {
     }
 }
 impl PieceMoves for KingMoves {
+    #[inline(always)]
     fn pseudo_legals(sq: Square, _: Color, _combined: BitBoard, mask: BitBoard) -> BitBoard {
         magic::get_king_moves(sq) & mask
     }
 
+    #[inline(always)]
     fn legals<T: CheckStatus>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
         let combined = board.get_combined_bitboard();
         let color = board.side_to_move();

@@ -6,6 +6,7 @@ use crate::square::Square;
 
 include!(concat!(env!("OUT_DIR"), "/magic_file.rs"));
 
+#[inline(always)]
 pub fn get_rook_moves(square: Square, blockers: BitBoard) -> BitBoard {
     unsafe {
         let magic: Magic = *MAGIC_NUMBERS
@@ -18,6 +19,7 @@ pub fn get_rook_moves(square: Square, blockers: BitBoard) -> BitBoard {
     }
 }
 
+#[inline(always)]
 pub fn get_bishop_moves(square: Square, blockers: BitBoard) -> BitBoard {
     unsafe {
         let magic: Magic = *MAGIC_NUMBERS
@@ -30,14 +32,17 @@ pub fn get_bishop_moves(square: Square, blockers: BitBoard) -> BitBoard {
     }
 }
 
+#[inline(always)]
 pub fn get_bishop_rays(square: Square) -> BitBoard {
     unsafe { *BISHOP_RAYS.get_unchecked(square.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_rook_rays(square: Square) -> BitBoard {
     unsafe { *ROOK_RAYS.get_unchecked(square.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_line(sq_1: Square, sq_2: Square) -> BitBoard {
     unsafe {
         *LINES
@@ -46,6 +51,7 @@ pub fn get_line(sq_1: Square, sq_2: Square) -> BitBoard {
     }
 }
 
+#[inline(always)]
 pub fn get_between(sq_1: Square, sq_2: Square) -> BitBoard {
     unsafe {
         *BETWEEN
@@ -54,10 +60,12 @@ pub fn get_between(sq_1: Square, sq_2: Square) -> BitBoard {
     }
 }
 
+#[inline(always)]
 pub fn get_knight_moves(square: Square) -> BitBoard {
     unsafe { *KNIGHT_MOVES.get_unchecked(square.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_pawn_attacks(square: Square, color: Color, blockers: BitBoard) -> BitBoard {
     unsafe {
         *PAWN_ATTACKS
@@ -67,6 +75,7 @@ pub fn get_pawn_attacks(square: Square, color: Color, blockers: BitBoard) -> Bit
     }
 }
 
+#[inline(always)]
 fn get_pawn_forward_moves(sq: Square, color: Color, blockers: BitBoard) -> BitBoard {
     unsafe {
         if !(BitBoard::from_square(sq.forward(color).unwrap()) & blockers).is_empty() {
@@ -80,30 +89,37 @@ fn get_pawn_forward_moves(sq: Square, color: Color, blockers: BitBoard) -> BitBo
     }
 }
 
+#[inline(always)]
 pub fn get_pawn_moves(sq: Square, color: Color, blockers: BitBoard) -> BitBoard {
     get_pawn_attacks(sq, color, blockers) ^ get_pawn_forward_moves(sq, color, blockers)
 }
 
+#[inline(always)]
 pub fn get_pawn_source_double_moves() -> BitBoard {
     PAWN_SOURCE_DOUBLE_MOVES
 }
 
+#[inline(always)]
 pub fn get_pawn_dest_double_moves() -> BitBoard {
     PAWN_DEST_DOUBLE_MOVES
 }
 
+#[inline(always)]
 pub fn get_rank_bitboard(rank: Rank) -> BitBoard {
     unsafe { *RANKS.get_unchecked(rank.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_adjacent_files(file: File) -> BitBoard {
     unsafe { *ADJACENT_FILES.get_unchecked(file.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_king_moves(sq: Square) -> BitBoard {
     unsafe { *KING_MOVES.get_unchecked(sq.to_index()) }
 }
 
+#[inline(always)]
 pub fn get_castle_squares() -> BitBoard {
     CASTLE_SQUARES
 }

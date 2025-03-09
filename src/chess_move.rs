@@ -9,6 +9,7 @@ pub struct ChessMove {
 }
 
 impl ChessMove {
+    #[inline(always)]
     pub fn new(source: Square, dest: Square, promotion: Option<Piece>) -> ChessMove {
         ChessMove {
             source,

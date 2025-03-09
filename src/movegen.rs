@@ -16,6 +16,7 @@ pub struct BitBoardMove {
 }
 
 impl BitBoardMove {
+    #[inline(always)]
     pub fn new(square: Square, bitboard: BitBoard, promotion: bool) -> Self {
         Self {
             square,
@@ -60,6 +61,7 @@ impl MoveGen {
         movelist
     }
 
+    #[inline(always)]
     pub fn new_legal(board: &Board) -> MoveGen {
         MoveGen {
             moves: MoveGen::enumerate_moves(board),

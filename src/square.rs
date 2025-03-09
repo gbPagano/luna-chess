@@ -10,28 +10,34 @@ use std::str::FromStr;
 pub struct Square(u8);
 
 impl Square {
+    #[inline(always)]
     pub fn new(rank: Rank, file: File) -> Self {
         Square(((rank.to_index() << 3) ^ file.to_index()) as u8)
     }
 
     /// Creates a `Square` from an index (0-63), ensuring it remains within bounds.
+    #[inline(always)]
     pub fn from_index(idx: u8) -> Self {
         Square(idx & 63)
     }
 
+    #[inline(always)]
     pub fn to_index(self) -> usize {
         self.0 as usize
     }
 
+    #[inline(always)]
     pub fn get_rank(&self) -> Rank {
         Rank::from_index((self.0 >> 3) as usize)
     }
 
+    #[inline(always)]
     pub fn get_file(&self) -> File {
         File::from_index((self.0 & 7) as usize)
     }
 
     /// Returns the square one rank above, if possible.
+    #[inline(always)]
     pub fn up(&self) -> Option<Square> {
         if self.get_rank() == Rank::Eighth {
             None
@@ -41,6 +47,7 @@ impl Square {
     }
 
     /// Returns the square one rank below, if possible.
+    #[inline(always)]
     pub fn down(&self) -> Option<Square> {
         if self.get_rank() == Rank::First {
             None
@@ -50,6 +57,7 @@ impl Square {
     }
 
     /// Returns the square one file to the left, if possible.
+    #[inline(always)]
     pub fn left(&self) -> Option<Square> {
         if self.get_file() == File::A {
             None
@@ -59,6 +67,7 @@ impl Square {
     }
 
     /// Returns the square one file to the right, if possible.
+    #[inline(always)]
     pub fn right(&self) -> Option<Square> {
         if self.get_file() == File::H {
             None
@@ -67,6 +76,7 @@ impl Square {
         }
     }
 
+    #[inline(always)]
     pub fn forward(&self, color: Color) -> Option<Square> {
         match color {
             Color::White => self.up(),
@@ -74,6 +84,7 @@ impl Square {
         }
     }
 
+    #[inline(always)]
     pub fn backward(&self, color: Color) -> Option<Square> {
         match color {
             Color::White => self.down(),
@@ -82,11 +93,13 @@ impl Square {
     }
 
     /// Checks if the square is on the edge of the board
+    #[inline(always)]
     pub fn is_edge(&self) -> bool {
         self.get_file().is_edge() || self.get_rank().is_edge()
     }
 
     /// Returns an iterator over all 64 squares on the board.
+    #[inline(always)]
     pub fn all_squares() -> impl Iterator<Item = Square> {
         (0..64).map(Square::from_index)
     }
@@ -94,6 +107,7 @@ impl Square {
 
 impl Default for Square {
     /// Returns the default square (A1).
+    #[inline(always)]
     fn default() -> Self {
         Self::new(Rank::First, File::A)
     }
